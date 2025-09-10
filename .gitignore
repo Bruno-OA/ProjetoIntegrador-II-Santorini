@@ -1,0 +1,21 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.VC.db
+*.VC.opendb
+*.pdb
+*.exe
+*.obj
+*.idb
+*.ilk
+*.log
+
+# Bibliotecas e dependências externas
+*.lib
+*.dll
+
+# Build folders
+Debug/
+Release/
+x64/
