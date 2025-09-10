@@ -19,3 +19,8 @@
 Debug/
 Release/
 x64/
+
+# Pasta de pacotes/bibliotecas externas
+packages/
+vcpkg_installed/
+vcpkg/
