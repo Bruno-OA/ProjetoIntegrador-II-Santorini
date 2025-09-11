@@ -1,0 +1,21 @@
+banco{
+	renda fixa, poupança, variavel, passiva, ações;
+}
+mercado negro{
+	bet, apostas e dinheiro facil
+}
+vendinha{
+	armas, armdura, comida e "poção"
+}
+personagem{
+	criar, testar os sprits
+}
+colisão com pop-up{
+	aparecer janela de evento de acordo com a interação
+}
+mapa{
+	fazer
+}
+masmorra{
+	bonus
+}
