@@ -58,7 +58,6 @@ int main() {
             frame += 0.3f;
             if (frame > 2.9f) frame = 0;
 
-            al_clear_to_color(al_map_rgb(255, 255, 255));
 
             int src_x = (int)frame * FRAME_W;
             int src_y = current_row * FRAME_H;
