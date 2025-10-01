@@ -142,6 +142,10 @@
   <ItemGroup>
     <ClCompile Include="mainTeste.c" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\..\..\Documents\mapa_fundo.png" />
+    <Image Include="..\..\..\..\Documents\menu_fundo.png" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\AllegroDeps.1.15.0\build\native\AllegroDeps.targets" Condition="Exists('packages\AllegroDeps.1.15.0\build\native\AllegroDeps.targets')" />
