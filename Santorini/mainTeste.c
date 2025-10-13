@@ -32,12 +32,12 @@ ALLEGRO_BITMAP* img_player_sprite = NULL;
 // Variáveis de Posição, Velocidade e Animação
 float player_pos_x = LARGURA_TELA / 2.0;
 float player_pos_y = ALTURA_TELA / 2.0;
-float player_velocidade = 10.0; // Velocidade em pixels por frame (igual ao seu novo código)
+float player_velocidade = 7.0; // Velocidade em pixels por frame (igual ao seu novo código)
 
 float anim_frame = 0.f;          // Contador do frame atual
 int anim_current_frame_y = 63 * 2; // Linha do sprite (Começa olhando para baixo)
-const int FRAME_LARGURA = 47;
-const int FRAME_ALTURA = 63;
+const int FRAME_LARGURA = 155;
+const int FRAME_ALTURA = 134;
 // ===================================
 
 // Variáveis do Botão "Iniciar"
@@ -81,7 +81,7 @@ int carregar_imagens() {
     }
 
     // 3. Carrega o Sprite do Jogador (Substitua "sprite01.png" pelo caminho correto)
-    img_player_sprite = al_load_bitmap("sprite01.png");
+    img_player_sprite = al_load_bitmap("sprite0.2.png");
     if (!img_player_sprite) {
         fprintf(stderr, "ERRO: Não foi possível carregar sprite01.png. O jogador será invisível!\n");
     }
@@ -179,28 +179,28 @@ int main() {
                 // === LÓGICA DE MOVIMENTAÇÃO E ANIMAÇÃO (DO SEU NOVO CÓDIGO) ===
                 if (key_down[ALLEGRO_KEY_UP] || key_down[ALLEGRO_KEY_W]) {
                     player_pos_y -= player_velocidade;
-                    anim_current_frame_y = 0; // Olhando para cima
+                    anim_current_frame_y = FRAME_ALTURA * 3; // Olhando para cima
                     andando = true;
                 }
                 if (key_down[ALLEGRO_KEY_DOWN] || key_down[ALLEGRO_KEY_S]) {
                     player_pos_y += player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA * 2; // Olhando para baixo
+                    anim_current_frame_y = FRAME_ALTURA * 0 ; // Olhando para baixo
                     andando = true;
                 }
                 if (key_down[ALLEGRO_KEY_LEFT] || key_down[ALLEGRO_KEY_A]) {
                     player_pos_x -= player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA * 3; // Olhando para a esquerda
+                    anim_current_frame_y = FRAME_ALTURA ; // Olhando para a esquerda
                     andando = true;
                 }
                 if (key_down[ALLEGRO_KEY_RIGHT] || key_down[ALLEGRO_KEY_D]) {
                     player_pos_x += player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA; // Olhando para a direita
+                    anim_current_frame_y = FRAME_ALTURA * 2; // Olhando para a direita
                     andando = true;
                 }
 
                 if (andando) {
                     anim_frame += 0.3f;
-                    if (anim_frame >= 4) anim_frame = 0; // 4 frames (0,1,2,3)
+                    if (anim_frame >= 3) anim_frame = 0; // 4 frames (0,1,2,3)
                 }
                 else {
                     anim_frame = 0; // Parado no frame inicial da linha
