@@ -80,10 +80,10 @@ CoordenadasBotao TUTORIAL_BTN = {
     .y2 = 630
 };
 CoordenadasBotao FECHAR_BTN = {
-    .x1 = 1250, // Exemplo: Canto superior esquerdo
-    .y1 = 780,
-    .x2 = 1000,
-    .y2 = 600
+    .x1 = 1100, // Exemplo: Canto superior esquerdo
+    .y1 = 50,
+    .x2 = 1250,
+    .y2 = 100
 };
 CoordenadasBotao CAMA_AREA = {
     .x1 = 350,
@@ -92,9 +92,9 @@ CoordenadasBotao CAMA_AREA = {
     .y2 = 560
 };
 CoordenadasBotao PORTA_AREA = {
-    .x1 = 1000,
+    .x1 = 920,
     .y1 = 300,
-    .x2 = 920,
+    .x2 = 1000,
     .y2 = 550
 };
 
@@ -214,6 +214,7 @@ int carregar_imagens() {
         }
         else return 0;
     }
+
     img_fim_dia_fundo = al_load_bitmap("fim_dia_fundo.png");
     if (!img_fim_dia_fundo) { /* ... lógica de erro com al_map_rgb(150, 150, 255) ... */
         fprintf(stderr, "ERRO: Não foi possível carregar banco_fundo.png. Usando cor simples.\n");
@@ -372,19 +373,27 @@ int main() {
         else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
             // Lógica do ESC
             if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
-                if (estado_atual == TELA_JOGO) {
-                    estado_atual = TELA_MENU;
-                    printf("Transição: Jogo -> Menu\n");
-                }
-                else if (estado_atual == TELA_MENU) {
-                    rodando = false;
-                }
-            }
-            if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
-                if (estado_atual == TELA_MERCADO || estado_atual == TELA_CASSINO || estado_atual == TELA_BANCO) { // MUDANÇA AQUI
+                switch (estado_atual) {
+                    case TELA_JOGO:
+                    case TELA_QUARTO:
+                    case TELA_TUTORIAL:
+                    case TELA_FIM_DIA:
+                        estado_atual = TELA_MENU;
+                        printf("Transição: Jogo -> Menu\n");
+                        break;
+
+                    case TELA_MERCADO:
+                    case TELA_CASSINO:
+                    case TELA_BANCO:
                     estado_atual = TELA_JOGO; // Volta para o mapa
                     current_npc_id = -1;
                     printf("Saindo do dialogo. Voltando para o Jogo.\n");
+                    break;
+
+                    case TELA_MENU:
+                        rodando = false;
+                    default:
+                        break;
                 }
             }
             // Liberação da tecla
