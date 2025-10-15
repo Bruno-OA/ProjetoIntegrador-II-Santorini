@@ -118,7 +118,7 @@ bool key_down[ALLEGRO_KEY_MAX] = { false };
 // Função para Carregar Imagens
 int carregar_imagens() {
     // 1. Carrega o fundo do Menu
-    img_menu_fundo = al_load_bitmap("menu_fundo.png");
+    img_menu_fundo = al_load_bitmap("menu_fundo1.png");
     // ... (Seu código de tratamento de erro para menu_fundo) ...
     if (!img_menu_fundo) {
         fprintf(stderr, "ERRO: Não foi possível carregar menu_fundo.png. Usando cor simples.\n");
@@ -165,7 +165,7 @@ int carregar_imagens() {
     }
 
     //Carrega o fundo do quarto
-    img_quarto_fundo = al_load_bitmap("quarto_fundo.png");
+    img_quarto_fundo = al_load_bitmap("quarto_fundo1.png");
     if (!img_quarto_fundo) {
         fprintf(stderr, "ERRO: Nao foi possivel carregar quarto_fundo.png. Usando cor simples.\n");
         img_quarto_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
