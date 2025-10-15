@@ -53,8 +53,8 @@ float player_velocidade = 7.0; // Velocidade em pixels por frame (igual ao seu n
 int PLAYER_RAIO = 20;
 float anim_frame = 0.f;          // Contador do frame atual
 int anim_current_frame_y = 63 * 2; // Linha do sprite (Começa olhando para baixo)
-const int FRAME_LARGURA = 155;
-const int FRAME_ALTURA = 134;
+const int FRAME_LARGURA = 95;
+const int FRAME_ALTURA = 180;
 // ===================================
 
 NPC NPC_LIST[MAX_NPCS] = {
@@ -145,7 +145,7 @@ int carregar_imagens() {
     }
 
     // 3. Carrega o Sprite do Jogador (Substitua "sprite01.png" pelo caminho correto)
-    img_player_sprite = al_load_bitmap("sprite0.2.png");
+    img_player_sprite = al_load_bitmap("sprite_final.png");
     if (!img_player_sprite) {
         fprintf(stderr, "ERRO: Não foi possível carregar sprite01.png. O jogador será invisível!\n");
     }
@@ -411,7 +411,7 @@ int main() {
                 // === LÓGICA DE MOVIMENTAÇÃO E ANIMAÇÃO (DO SEU NOVO CÓDIGO) ===
                 if (key_down[ALLEGRO_KEY_UP] || key_down[ALLEGRO_KEY_W]) {
                     player_pos_y -= player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA * 3; // Olhando para cima
+                    anim_current_frame_y = FRAME_ALTURA * 2; // Olhando para cima
                     andando = true;
                 }
                 if (key_down[ALLEGRO_KEY_DOWN] || key_down[ALLEGRO_KEY_S]) {
@@ -421,12 +421,12 @@ int main() {
                 }
                 if (key_down[ALLEGRO_KEY_LEFT] || key_down[ALLEGRO_KEY_A]) {
                     player_pos_x -= player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA ; // Olhando para a esquerda
+                    anim_current_frame_y = FRAME_ALTURA * 3; // Olhando para a esquerda
                     andando = true;
                 }
                 if (key_down[ALLEGRO_KEY_RIGHT] || key_down[ALLEGRO_KEY_D]) {
                     player_pos_x += player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA * 2; // Olhando para a direita
+                    anim_current_frame_y = FRAME_ALTURA ; // Olhando para a direita
                     andando = true;
                 }
 
