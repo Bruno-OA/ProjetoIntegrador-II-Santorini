@@ -28,6 +28,7 @@ EstadoDoJogo estado_atual = TELA_MENU;
 ALLEGRO_BITMAP* img_menu_fundo = NULL;
 ALLEGRO_BITMAP* img_mapa_fundo = NULL;
 ALLEGRO_BITMAP* img_tutorial_fundo = NULL;
+ALLEGRO_BITMAP* img_quarto_fundo = NULL;
 
 // ===================================
 // NOVAS VARIÁVEIS DO JOGADOR (SPRITE)
@@ -129,6 +130,17 @@ int carregar_imagens() {
         }
         else return 0;
     }
+    img_quarto_fundo = al_load_bitmap("quarto_fundo.png");
+    if (!img_quarto_fundo) {
+        fprintf(stderr, "ERRO: Nao foi possivel carregar quarto_fundo.png. Usando cor simples.\n");
+        img_quarto_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
+        if (img_quarto_fundo) {
+            al_set_target_bitmap(img_quarto_fundo);
+            al_clear_to_color(al_map_rgb(100, 50, 50)); // Fundo Marrom/Quarto Simples
+            al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
+        }
+        else return 0;
+    }
     return 1; // Sucesso
 }
 
@@ -137,6 +149,7 @@ void limpar_recursos() {
     if (img_mapa_fundo) al_destroy_bitmap(img_mapa_fundo);
     if (img_player_sprite) al_destroy_bitmap(img_player_sprite);
     if (img_tutorial_fundo) al_destroy_bitmap(img_tutorial_fundo);
+    if (img_quarto_fundo) al_destroy_bitmap(img_quarto_fundo);
 }
 
 
@@ -188,7 +201,10 @@ int main() {
                 if (ev.mouse.x >= INICIAR_BTN.x1 && ev.mouse.x <= INICIAR_BTN.x2 &&
                     ev.mouse.y >= INICIAR_BTN.y1 && ev.mouse.y <= INICIAR_BTN.y2)
                 {
-                    estado_atual = TELA_JOGO;
+                    estado_atual = TELA_QUARTO;
+
+                    player_pos_x = LARGURA_TELA / 2.0;
+                    player_pos_y = ALTURA_TELA / 2.0;
                     printf("Transição: Menu -> Jogo\n");
                 }
                 // Botão TUTORIAL
@@ -197,6 +213,41 @@ int main() {
                 {
                     estado_atual = TELA_TUTORIAL;
                     printf("Transição: Menu -> Tutorial\n");
+                }
+            }
+            else if (estado_atual == TELA_QUARTO) {
+
+                // Interação com a CAMA (Encerra o dia)
+                if (ev.mouse.x >= CAMA_AREA.x1 && ev.mouse.x <= CAMA_AREA.x2 &&
+                    ev.mouse.y >= CAMA_AREA.y1 && ev.mouse.y <= CAMA_AREA.y2)
+                {
+                    // A transição para a tela final do dia deve ocorrer se o personagem estiver perto da cama
+                    // Se você só usa clique, use o clique:
+                    estado_atual = TELA_FIM_DIA;
+                    printf("Interação: Quarto -> Fim do Dia (Cama)\n");
+                }
+
+                // Interação com a PORTA (Sai para o mapa)
+                else if (ev.mouse.x >= PORTA_AREA.x1 && ev.mouse.x <= PORTA_AREA.x2 &&
+                    ev.mouse.y >= PORTA_AREA.y1 && ev.mouse.y <= PORTA_AREA.y2)
+                {
+                    // Transição para a TELA_JOGO (Mapa)
+                    estado_atual = TELA_JOGO;
+                    // Opcional: Colocar jogador na entrada do mapa
+                    // jogador_x = 640; 
+                    // jogador_y = 600; 
+                    printf("Interação: Quarto -> Jogo (Porta)\n");
+                }
+            }
+
+            // --- NOVO: Lógica no FIM DO DIA ---
+            else if (estado_atual == TELA_FIM_DIA) {
+                // Exemplo: Usar o botão FECHAR para voltar ao Menu principal e iniciar um novo dia
+                if (ev.mouse.x >= FECHAR_BTN.x1 && ev.mouse.x <= FECHAR_BTN.x2 &&
+                    ev.mouse.y >= FECHAR_BTN.y1 && ev.mouse.y <= FECHAR_BTN.y2)
+                {
+                    estado_atual = TELA_MENU; // Volta para o menu
+                    printf("Botão Fechar Clicado: Fim do Dia -> Menu\n");
                 }
             }
             if (estado_atual == TELA_TUTORIAL) {
@@ -233,7 +284,7 @@ int main() {
         else if (ev.type == ALLEGRO_EVENT_TIMER) {
 
             // --- Lógica de Atualização por Estado ---
-            if (estado_atual == TELA_JOGO) {
+            if (estado_atual == TELA_JOGO || estado_atual == TELA_QUARTO) {
                 bool andando = false;
 
                 // === LÓGICA DE MOVIMENTAÇÃO E ANIMAÇÃO (DO SEU NOVO CÓDIGO) ===
@@ -285,6 +336,33 @@ int main() {
                 al_draw_filled_rectangle(TUTORIAL_BTN.x1, TUTORIAL_BTN.y1, TUTORIAL_BTN.x2, TUTORIAL_BTN.y2, al_map_rgb(50, 200, 50));
                 break;
 
+            case TELA_QUARTO: // NOVO
+                // Desenhar fundo do quarto (img_quarto_fundo)
+                al_draw_bitmap(img_quarto_fundo, 0, 0, 0);
+                al_clear_to_color(al_map_rgb(100, 50, 50)); // Fundo de Quarto Simples
+                // Desenhar Cama (para debug visual)
+                al_draw_filled_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(150, 150, 150));
+                // Desenhar Porta (para debug visual)
+                al_draw_filled_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(10, 10, 10));
+                if (img_player_sprite) {
+                    al_draw_bitmap_region(
+                        img_player_sprite,
+                        FRAME_LARGURA * (int)anim_frame, // Posição X na folha de sprites
+                        anim_current_frame_y,            // Posição Y na folha de sprites
+                        FRAME_LARGURA,                   // Largura do frame
+                        FRAME_ALTURA,                    // Altura do frame
+                        player_pos_x,                    // Posição X na tela
+                        player_pos_y,                    // Posição Y na tela
+                        0
+                    );
+                }
+                else {
+                    // Desenha um quadrado vermelho substituto se o sprite falhar
+                    al_draw_filled_rectangle(player_pos_x, player_pos_y, player_pos_x + FRAME_LARGURA, player_pos_y + FRAME_ALTURA, al_map_rgb(255, 0, 0));
+                }
+                break;
+                break;
+
             case TELA_JOGO:
                 al_draw_bitmap(img_mapa_fundo, 0, 0, 0);
 
@@ -315,6 +393,16 @@ int main() {
                 al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(0, 0, 0));
                 // Nota: Você pode precisar do addon de fonte para escrever "VOLTAR" no botão
 
+                break;
+
+            case TELA_FIM_DIA: // NOVO
+                // Desenhar fundo da tela final
+                // al_draw_bitmap(img_fim_dia_fundo, 0, 0, 0);
+                al_clear_to_color(al_map_rgb(20, 20, 20)); // Fundo de Fim de Dia Escuro
+
+                // Desenhar botão para continuar/voltar (usando o FECHAR_BTN)
+                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(255, 255, 0));
+                // al_draw_text(seu_font, al_map_rgb(0,0,0), 640, 575, ALLEGRO_ALIGN_CENTER, "NOVO DIA");
                 break;
 
             case TELA_SAIR:
