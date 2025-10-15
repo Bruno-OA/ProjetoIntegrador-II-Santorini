@@ -339,7 +339,7 @@ int main() {
             case TELA_QUARTO: // NOVO
                 // Desenhar fundo do quarto (img_quarto_fundo)
                 al_draw_bitmap(img_quarto_fundo, 0, 0, 0);
-                al_clear_to_color(al_map_rgb(100, 50, 50)); // Fundo de Quarto Simples
+                //al_clear_to_color(al_map_rgb(100, 50, 50)); // Fundo de Quarto Simples
                 // Desenhar Cama (para debug visual)
                 al_draw_filled_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(150, 150, 150));
                 // Desenhar Porta (para debug visual)
