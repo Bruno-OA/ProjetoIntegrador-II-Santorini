@@ -68,34 +68,34 @@ NPC NPC_LIST[MAX_NPCS] = {
 
 // mapeamento de botoes
 CoordenadasBotao INICIAR_BTN = {
-    .x1 = 540,
-    .y1 = 450,
-    .x2 = 740,
-    .y2 = 500
+    .x1 = 480,
+    .y1 = 420,
+    .x2 = 848,
+    .y2 = 510
 };
 CoordenadasBotao TUTORIAL_BTN = {
-    .x1 = 540,
-    .y1 = 550,
-    .x2 = 740,
-    .y2 = 600
+    .x1 = 480,
+    .y1 = 545,
+    .x2 = 848,
+    .y2 = 630
 };
 CoordenadasBotao FECHAR_BTN = {
-    .x1 = 100, // Exemplo: Canto superior esquerdo
-    .y1 = 50,
-    .x2 = 250,
-    .y2 = 100
+    .x1 = 1250, // Exemplo: Canto superior esquerdo
+    .y1 = 780,
+    .x2 = 1000,
+    .y2 = 600
 };
 CoordenadasBotao CAMA_AREA = {
-    .x1 = 900,
-    .y1 = 550,
-    .x2 = 1200,
-    .y2 = 700
+    .x1 = 350,
+    .y1 = 430,
+    .x2 = 570,
+    .y2 = 560
 };
 CoordenadasBotao PORTA_AREA = {
-    .x1 = 600,
-    .y1 = 0,
-    .x2 = 700,
-    .y2 = 150
+    .x1 = 1000,
+    .y1 = 300,
+    .x2 = 920,
+    .y2 = 550
 };
 
 bool check_collision(int x1, int y1, int r1, int x2, int y2, int r2) {
