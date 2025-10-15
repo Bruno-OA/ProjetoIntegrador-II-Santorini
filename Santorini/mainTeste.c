@@ -22,7 +22,7 @@ typedef enum {
     //TELA_INTERACAO = 6,
     TELA_MERCADO = 6,     // NOVO: Tela específica para NPC 1
     TELA_CASSINO = 7,     // NOVO: Tela específica para NPC 2
-    TELA_NPC_3 = 8,     // NOVO: Tela específica para NPC 3
+    TELA_BANCO = 8,     // NOVO: Tela específica para NPC 3
     TELA_SAIR = 9
 } EstadoDoJogo;
 
@@ -38,7 +38,7 @@ ALLEGRO_BITMAP* img_tutorial_fundo = NULL;
 ALLEGRO_BITMAP* img_quarto_fundo = NULL;
 ALLEGRO_BITMAP* img_mercado_fundo = NULL;
 ALLEGRO_BITMAP* img_cassino_fundo = NULL;
-ALLEGRO_BITMAP* img_npc3_fundo = NULL; 
+ALLEGRO_BITMAP* img_banco_fundo = NULL; 
 
 // ===================================
 // NOVAS VARIÁVEIS DO JOGADOR (SPRITE)
@@ -178,7 +178,7 @@ int carregar_imagens() {
     // Carrega fundos de NPC (Simulação de tela 1, 2 e 3)
     img_mercado_fundo = al_load_bitmap("mercado_fundo.png");
     if (!img_mercado_fundo) {
-        fprintf(stderr, "ERRO: Não foi possível carregar npc1_fundo.png. Usando cor simples.\n");
+        fprintf(stderr, "ERRO: Não foi possível carregar mercado_fundo.png. Usando cor simples.\n");
         img_mercado_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
         if (img_mercado_fundo) {
             al_set_target_bitmap(img_mercado_fundo);
@@ -191,7 +191,7 @@ int carregar_imagens() {
     // ... (Repetir para img_cassino_fundo - Verde Claro 150, 255, 150)
     img_cassino_fundo = al_load_bitmap("cassino_fundo.png");
     if (!img_cassino_fundo) { /* ... lógica de erro com al_map_rgb(150, 255, 150) ... */
-        fprintf(stderr, "ERRO: Não foi possível carregar npc2_fundo.png. Usando cor simples.\n");
+        fprintf(stderr, "ERRO: Não foi possível carregar cassino_fundo.png. Usando cor simples.\n");
         img_cassino_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
         if (img_cassino_fundo) {
             al_set_target_bitmap(img_cassino_fundo);
@@ -201,13 +201,13 @@ int carregar_imagens() {
         else return 0;
     }
 
-    // ... (Repetir para img_npc3_fundo - Azul Claro 150, 150, 255)
-    img_npc3_fundo = al_load_bitmap("npc3_fundo.png");
-    if (!img_npc3_fundo) { /* ... lógica de erro com al_map_rgb(150, 150, 255) ... */
-        fprintf(stderr, "ERRO: Não foi possível carregar npc3_fundo.png. Usando cor simples.\n");
-        img_npc3_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
-        if (img_npc3_fundo) {
-            al_set_target_bitmap(img_npc3_fundo);
+    // ... (Repetir para img_banco_fundo - Azul Claro 150, 150, 255)
+    img_banco_fundo = al_load_bitmap("banco_fundo.png");
+    if (!img_banco_fundo) { /* ... lógica de erro com al_map_rgb(150, 150, 255) ... */
+        fprintf(stderr, "ERRO: Não foi possível carregar banco_fundo.png. Usando cor simples.\n");
+        img_banco_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
+        if (img_banco_fundo) {
+            al_set_target_bitmap(img_banco_fundo);
             al_clear_to_color(al_map_rgb(150, 150, 255));
             al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
         }
@@ -225,7 +225,7 @@ void limpar_recursos() {
     if (img_quarto_fundo) al_destroy_bitmap(img_quarto_fundo);
     if (img_mercado_fundo) al_destroy_bitmap(img_mercado_fundo);
     if (img_cassino_fundo) al_destroy_bitmap(img_cassino_fundo);
-    if (img_npc3_fundo) al_destroy_bitmap(img_npc3_fundo);
+    if (img_banco_fundo) al_destroy_bitmap(img_banco_fundo);
 }
 
 
@@ -347,7 +347,7 @@ int main() {
                         switch (current_npc_id) {
                         case 1: estado_atual = TELA_MERCADO; break;
                         case 2: estado_atual = TELA_CASSINO; break;
-                        case 3: estado_atual = TELA_NPC_3; break;
+                        case 3: estado_atual = TELA_BANCO; break;
                         default: estado_atual = TELA_JOGO; break; // Ignora se ID for desconhecido
                         }
                         printf("Iniciando dialogo com NPC ID: %d. Tela: %d\n", current_npc_id, estado_atual);
@@ -367,7 +367,7 @@ int main() {
                 }
             }
             if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
-                if (estado_atual == TELA_MERCADO || estado_atual == TELA_CASSINO || estado_atual == TELA_NPC_3) { // MUDANÇA AQUI
+                if (estado_atual == TELA_MERCADO || estado_atual == TELA_CASSINO || estado_atual == TELA_BANCO) { // MUDANÇA AQUI
                     estado_atual = TELA_JOGO; // Volta para o mapa
                     current_npc_id = -1;
                     printf("Saindo do dialogo. Voltando para o Jogo.\n");
@@ -546,8 +546,8 @@ int main() {
                 al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
-            case TELA_NPC_3: // TELA 3 (NPC Pedro)
-                al_draw_bitmap(img_npc3_fundo, 0, 0, 0);
+            case TELA_BANCO: // TELA 3 (NPC Pedro)
+                al_draw_bitmap(img_banco_fundo, 0, 0, 0);
                 // Botão de Sair (FECHAR_BTN)
                 al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
