@@ -55,6 +55,7 @@ float anim_frame = 0.f;          // Contador do frame atual
 int anim_current_frame_y = 63 * 2; // Linha do sprite (Começa olhando para baixo)
 const int FRAME_LARGURA = 95;
 const int FRAME_ALTURA = 180;
+int quarto_interact_id = -1;
 // ===================================
 
 NPC NPC_LIST[MAX_NPCS] = {
@@ -304,31 +305,7 @@ int main() {
                     estado_atual = TELA_TUTORIAL;
                     printf("Transição: Menu -> Tutorial\n");
                 }
-            }
-            else if (estado_atual == TELA_QUARTO) {
-
-                // Interação com a CAMA (Encerra o dia)
-                if (ev.mouse.x >= CAMA_AREA.x1 && ev.mouse.x <= CAMA_AREA.x2 &&
-                    ev.mouse.y >= CAMA_AREA.y1 && ev.mouse.y <= CAMA_AREA.y2)
-                {
-                    // A transição para a tela final do dia deve ocorrer se o personagem estiver perto da cama
-                    // Se você só usa clique, use o clique:
-                    estado_atual = TELA_FIM_DIA;
-                    printf("Interação: Quarto -> Fim do Dia (Cama)\n");
-                }
-
-                // Interação com a PORTA (Sai para o mapa)
-                else if (ev.mouse.x >= PORTA_AREA.x1 && ev.mouse.x <= PORTA_AREA.x2 &&
-                    ev.mouse.y >= PORTA_AREA.y1 && ev.mouse.y <= PORTA_AREA.y2)
-                {
-                    // Transição para a TELA_JOGO (Mapa)
-                    estado_atual = TELA_JOGO;
-                    // Opcional: Colocar jogador na entrada do mapa
-                    // jogador_x = 640; 
-                    // jogador_y = 600; 
-                    printf("Interação: Quarto -> Jogo (Porta)\n");
-                }
-            }
+            }       
 
             // --- NOVO: Lógica no FIM DO DIA ---
             else if (estado_atual == TELA_FIM_DIA) {
@@ -353,19 +330,34 @@ int main() {
             if (ev.keyboard.keycode < ALLEGRO_KEY_MAX) {
                 key_down[ev.keyboard.keycode] = true;
             }
-            if (estado_atual == TELA_JOGO) {
-                // Exemplo de tecla 'E' para interagir
+            if (estado_atual == TELA_JOGO || estado_atual == TELA_QUARTO) {
                 if (ev.keyboard.keycode == ALLEGRO_KEY_E) {
-                    if (can_interact && current_npc_id != -1) {
-                        // MUDANÇA: Usar o ID do NPC para definir o estado
-                        switch (current_npc_id) {
-                        case 1: estado_atual = TELA_MERCADO; break;
-                        case 2: estado_atual = TELA_CASSINO; break;
-                        case 3: estado_atual = TELA_BANCO; break;
-						case 4: estado_atual = TELA_QUARTO; break;
-                        default: estado_atual = TELA_JOGO; break; // Ignora se ID for desconhecido
+                    if (can_interact) {
+                        if (estado_atual == TELA_JOGO && current_npc_id != -1) {
+                            if (ev.keyboard.keycode == ALLEGRO_KEY_E) {
+                                if (can_interact && current_npc_id != -1) {
+                                    // MUDANÇA: Usar o ID do NPC para definir o estado
+                                    switch (current_npc_id) {
+                                    case 1: estado_atual = TELA_MERCADO; break;
+                                    case 2: estado_atual = TELA_CASSINO; break;
+                                    case 3: estado_atual = TELA_BANCO; break;
+                                    case 4: estado_atual = TELA_QUARTO; break;
+                                    default: estado_atual = TELA_JOGO; break; // Ignora se ID for desconhecido
+                                    }
+                                    printf("Iniciando dialogo com NPC ID: %d. Tela: %d\n", current_npc_id, estado_atual);
+                                }
+                            }
                         }
-                        printf("Iniciando dialogo com NPC ID: %d. Tela: %d\n", current_npc_id, estado_atual);
+                        else if (estado_atual == TELA_QUARTO) {
+                            if (quarto_interact_id == 1) {
+                                estado_atual = TELA_FIM_DIA;
+                                printf("Interação (E): Quarto -> Fim do Dia (Cama)\n");
+                            }
+                            else if (quarto_interact_id == 2) {
+                                estado_atual = TELA_JOGO;
+                                printf("Interação (E): Quarto -> Jogo (Porta)\n");
+                            }
+                        }
                     }
                 }
             }
@@ -447,6 +439,30 @@ int main() {
             // Reset das flags de interação
             can_interact = false;
             current_npc_id = -1;
+            quarto_interact_id = -1;
+
+            if (estado_atual == TELA_QUARTO) {
+                int player_center_x = player_pos_x + FRAME_LARGURA / 2;
+                int player_center_y = player_pos_y + FRAME_ALTURA / 2;
+                int CAMA_RAIO = 150;
+                int cama_center_x = (CAMA_AREA.x1 + CAMA_AREA.x2) / 2;
+                int cama_center_y = (CAMA_AREA.y1 + CAMA_AREA.y2) / 2;
+
+                if (check_collision(player_center_x, player_center_y, PLAYER_RAIO,
+                    cama_center_x, cama_center_y, CAMA_RAIO)) {
+                    can_interact = true;
+                    quarto_interact_id = 1; // Cama
+                }
+                int PORTA_RAIO = 100;
+                int porta_center_x = (PORTA_AREA.x1 + PORTA_AREA.x2) / 2;
+                int porta_center_y = (PORTA_AREA.y1 + PORTA_AREA.y2) / 2;
+
+                if (check_collision(player_center_x, player_center_y, PLAYER_RAIO,
+                    porta_center_x, porta_center_y, PORTA_RAIO)) {
+                    can_interact = true;
+                    quarto_interact_id = 2; // Porta
+                }
+            }
 
             // --- Lógica de Interação/Colisão de NPCs (APENAS em TELA_JOGO) ---
             if (estado_atual == TELA_JOGO) {
