@@ -348,6 +348,7 @@ int main() {
                         case 1: estado_atual = TELA_MERCADO; break;
                         case 2: estado_atual = TELA_CASSINO; break;
                         case 3: estado_atual = TELA_BANCO; break;
+						case 4: estado_atual = TELA_QUARTO; break;
                         default: estado_atual = TELA_JOGO; break; // Ignora se ID for desconhecido
                         }
                         printf("Iniciando dialogo com NPC ID: %d. Tela: %d\n", current_npc_id, estado_atual);
