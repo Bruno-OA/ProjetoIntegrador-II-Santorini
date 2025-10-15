@@ -560,19 +560,19 @@ int main() {
             case TELA_MERCADO: // TELA 1 (NPC João)
                 al_draw_bitmap(img_mercado_fundo, 0, 0, 0);
                 // Botão de Sair (FECHAR_BTN)
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
             case TELA_CASSINO: // TELA 2 (NPC Maria)
                 al_draw_bitmap(img_cassino_fundo, 0, 0, 0);
                 // Botão de Sair (FECHAR_BTN)
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
             case TELA_BANCO: // TELA 3 (NPC Pedro)
                 al_draw_bitmap(img_banco_fundo, 0, 0, 0);
                 // Botão de Sair (FECHAR_BTN)
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
             case TELA_TUTORIAL:
@@ -580,8 +580,7 @@ int main() {
                 al_draw_bitmap(img_tutorial_fundo, 0, 0, 0);
 
                 // Desenha o botão FECHAR/VOLTAR para retornar ao menu
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(0, 0, 0));
-                // Nota: Você pode precisar do addon de fonte para escrever "VOLTAR" no botão
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(0, 0, 0));
 
                 break;
 
