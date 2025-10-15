@@ -33,4 +33,9 @@
       <Filter>Arquivos de Origem</Filter>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="botoes.h">
+      <Filter>Arquivos de Origem</Filter>
+    </ClInclude>
+  </ItemGroup>
 </Project>

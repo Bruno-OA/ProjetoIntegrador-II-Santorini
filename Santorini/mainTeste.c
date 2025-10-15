@@ -5,6 +5,7 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_font.h> // Necessário se for usar o font addon
 #include <math.h>
+#include "botoes.h"
 
 // Definições de Tela
 #define LARGURA_TELA 1280
@@ -14,7 +15,10 @@
 typedef enum {
     TELA_MENU = 0,
     TELA_JOGO = 1,
-    TELA_SAIR = 2
+    TELA_TUTORIAL = 2,
+    TELA_QUARTO = 3,
+    TELA_FIM_DIA = 4,
+    TELA_SAIR = 9
 } EstadoDoJogo;
 
 // Variáveis Globais
@@ -23,6 +27,7 @@ EstadoDoJogo estado_atual = TELA_MENU;
 // Bitmaps do Menu/Mapa
 ALLEGRO_BITMAP* img_menu_fundo = NULL;
 ALLEGRO_BITMAP* img_mapa_fundo = NULL;
+ALLEGRO_BITMAP* img_tutorial_fundo = NULL;
 
 // ===================================
 // NOVAS VARIÁVEIS DO JOGADOR (SPRITE)
@@ -40,11 +45,37 @@ const int FRAME_LARGURA = 155;
 const int FRAME_ALTURA = 134;
 // ===================================
 
-// Variáveis do Botão "Iniciar"
-int btn_x1 = 540;
-int btn_y1 = 550;
-int btn_x2 = 740;
-int btn_y2 = 600;
+// mapeamento de botoes
+CoordenadasBotao INICIAR_BTN = {
+    .x1 = 540,
+    .y1 = 450,
+    .x2 = 740,
+    .y2 = 500
+};
+CoordenadasBotao TUTORIAL_BTN = {
+    .x1 = 540,
+    .y1 = 550,
+    .x2 = 740,
+    .y2 = 600
+};
+CoordenadasBotao FECHAR_BTN = {
+    .x1 = 100, // Exemplo: Canto superior esquerdo
+    .y1 = 50,
+    .x2 = 250,
+    .y2 = 100
+};
+CoordenadasBotao CAMA_AREA = {
+    .x1 = 900,
+    .y1 = 550,
+    .x2 = 1200,
+    .y2 = 700
+};
+CoordenadasBotao PORTA_AREA = {
+    .x1 = 600,
+    .y1 = 0,
+    .x2 = 700,
+    .y2 = 150
+};
 
 // Vetor de estados das teclas (para movimento contínuo)
 bool key_down[ALLEGRO_KEY_MAX] = { false };
@@ -86,6 +117,18 @@ int carregar_imagens() {
         fprintf(stderr, "ERRO: Não foi possível carregar sprite01.png. O jogador será invisível!\n");
     }
 
+    //Carrega o fundo do Tutorial
+    img_tutorial_fundo = al_load_bitmap("tutorial_fundo.png");
+    if (!img_tutorial_fundo) {
+        fprintf(stderr, "ERRO: Nao foi possivel carregar tutorial_fundo.png. Usando cor simples.\n");
+        img_tutorial_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
+        if (img_tutorial_fundo) {
+            al_set_target_bitmap(img_tutorial_fundo);
+            al_clear_to_color(al_map_rgb(200, 200, 100)); // Fundo Amarelo Claro
+            al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
+        }
+        else return 0;
+    }
     return 1; // Sucesso
 }
 
@@ -93,6 +136,7 @@ void limpar_recursos() {
     if (img_menu_fundo) al_destroy_bitmap(img_menu_fundo);
     if (img_mapa_fundo) al_destroy_bitmap(img_mapa_fundo);
     if (img_player_sprite) al_destroy_bitmap(img_player_sprite);
+    if (img_tutorial_fundo) al_destroy_bitmap(img_tutorial_fundo);
 }
 
 
@@ -140,11 +184,27 @@ int main() {
         }
         else if (ev.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
             if (estado_atual == TELA_MENU) {
-                if (ev.mouse.x >= btn_x1 && ev.mouse.x <= btn_x2 &&
-                    ev.mouse.y >= btn_y1 && ev.mouse.y <= btn_y2)
+                // Botão INICIAR
+                if (ev.mouse.x >= INICIAR_BTN.x1 && ev.mouse.x <= INICIAR_BTN.x2 &&
+                    ev.mouse.y >= INICIAR_BTN.y1 && ev.mouse.y <= INICIAR_BTN.y2)
                 {
                     estado_atual = TELA_JOGO;
                     printf("Transição: Menu -> Jogo\n");
+                }
+                // Botão TUTORIAL
+                if (ev.mouse.x >= TUTORIAL_BTN.x1 && ev.mouse.x <= TUTORIAL_BTN.x2 &&
+                    ev.mouse.y >= TUTORIAL_BTN.y1 && ev.mouse.y <= TUTORIAL_BTN.y2)
+                {
+                    estado_atual = TELA_TUTORIAL;
+                    printf("Transição: Menu -> Tutorial\n");
+                }
+            }
+            if (estado_atual == TELA_TUTORIAL) {
+                if (ev.mouse.x >= FECHAR_BTN.x1 && ev.mouse.x <= FECHAR_BTN.x2 &&
+                    ev.mouse.y >= FECHAR_BTN.y1 && ev.mouse.y <= FECHAR_BTN.y2)
+                {
+                    estado_atual = TELA_MENU; // Volta para o menu
+                    printf("Botão Fechar Clicado: Tutorial -> Menu\n");
                 }
             }
         }
@@ -221,7 +281,8 @@ int main() {
             switch (estado_atual) {
             case TELA_MENU:
                 al_draw_bitmap(img_menu_fundo, 0, 0, 0);
-                al_draw_filled_rectangle(btn_x1, btn_y1, btn_x2, btn_y2, al_map_rgb(50, 200, 50));
+                al_draw_filled_rectangle(INICIAR_BTN.x1, INICIAR_BTN.y1, INICIAR_BTN.x2, INICIAR_BTN.y2, al_map_rgb(50, 200, 50));
+                al_draw_filled_rectangle(TUTORIAL_BTN.x1, TUTORIAL_BTN.y1, TUTORIAL_BTN.x2, TUTORIAL_BTN.y2, al_map_rgb(50, 200, 50));
                 break;
 
             case TELA_JOGO:
@@ -244,6 +305,16 @@ int main() {
                     // Desenha um quadrado vermelho substituto se o sprite falhar
                     al_draw_filled_rectangle(player_pos_x, player_pos_y, player_pos_x + FRAME_LARGURA, player_pos_y + FRAME_ALTURA, al_map_rgb(255, 0, 0));
                 }
+                break;
+
+            case TELA_TUTORIAL:
+                // Desenha o fundo da Tela de Tutorial
+                al_draw_bitmap(img_tutorial_fundo, 0, 0, 0);
+
+                // Desenha o botão FECHAR/VOLTAR para retornar ao menu
+                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(0, 0, 0));
+                // Nota: Você pode precisar do addon de fonte para escrever "VOLTAR" no botão
+
                 break;
 
             case TELA_SAIR:

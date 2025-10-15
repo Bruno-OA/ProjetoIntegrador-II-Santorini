@@ -147,6 +147,9 @@
     <Image Include="..\..\..\..\Documents\menu_fundo.png" />
     <Image Include="..\..\..\..\Downloads\sprite01.png" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="botoes.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
     <Import Project="packages\AllegroDeps.1.15.0\build\native\AllegroDeps.targets" Condition="Exists('packages\AllegroDeps.1.15.0\build\native\AllegroDeps.targets')" />
