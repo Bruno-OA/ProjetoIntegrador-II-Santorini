@@ -50,7 +50,7 @@ ALLEGRO_BITMAP* img_player_sprite = NULL;
 float player_pos_x = LARGURA_TELA / 2.0;
 float player_pos_y = ALTURA_TELA / 2.0;
 float player_velocidade = 7.0; // Velocidade em pixels por frame (igual ao seu novo código)
-int PLAYER_RAIO = 20;
+int PLAYER_RAIO = 50;
 float anim_frame = 0.f;          // Contador do frame atual
 int anim_current_frame_y = 63 * 2; // Linha do sprite (Começa olhando para baixo)
 const int FRAME_LARGURA = 95;
@@ -59,10 +59,10 @@ const int FRAME_ALTURA = 180;
 
 NPC NPC_LIST[MAX_NPCS] = {
     // ID, X, Y, RAIO
-    { 1, 300, 300, 25 }, // NPC 1: João
-    { 2, 800, 200, 30 }, // NPC 2: Maria
-    { 3, 500, 600, 20 }, // NPC 3: Pedro
-    { 4, 100, 100, 25 }, // NPC 4: (Ocioso)
+    { 1, 250, 100, 30 }, // NPC 1: João
+    { 2, 650, 100, 30 }, // NPC 2: Maria
+    { 3, 1050, 100, 30 }, // NPC 3: Pedro
+    { 4, 2, 360, 40 }, // NPC 4: (Ocioso)
     { -1, 0, 0, 0 }      // Slot Vazio (ou use 0 na posição se não usar todos)
 };
 
@@ -560,19 +560,19 @@ int main() {
             case TELA_MERCADO: // TELA 1 (NPC João)
                 al_draw_bitmap(img_mercado_fundo, 0, 0, 0);
                 // Botão de Sair (FECHAR_BTN)
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
             case TELA_CASSINO: // TELA 2 (NPC Maria)
                 al_draw_bitmap(img_cassino_fundo, 0, 0, 0);
                 // Botão de Sair (FECHAR_BTN)
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
             case TELA_BANCO: // TELA 3 (NPC Pedro)
                 al_draw_bitmap(img_banco_fundo, 0, 0, 0);
                 // Botão de Sair (FECHAR_BTN)
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
             case TELA_TUTORIAL:
@@ -580,8 +580,7 @@ int main() {
                 al_draw_bitmap(img_tutorial_fundo, 0, 0, 0);
 
                 // Desenha o botão FECHAR/VOLTAR para retornar ao menu
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(0, 0, 0));
-                // Nota: Você pode precisar do addon de fonte para escrever "VOLTAR" no botão
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(0, 0, 0));
 
                 break;
 
