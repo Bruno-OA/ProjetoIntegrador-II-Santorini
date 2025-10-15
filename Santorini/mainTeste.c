@@ -6,6 +6,7 @@
 #include <allegro5/allegro_font.h> // Necessário se for usar o font addon
 #include <math.h>
 #include "botoes.h"
+#include "npcs.h"
 
 // Definições de Tela
 #define LARGURA_TELA 1280
@@ -18,17 +19,26 @@ typedef enum {
     TELA_TUTORIAL = 2,
     TELA_QUARTO = 3,
     TELA_FIM_DIA = 4,
+    //TELA_INTERACAO = 6,
+    TELA_NPC_1 = 6,     // NOVO: Tela específica para NPC 1
+    TELA_NPC_2 = 7,     // NOVO: Tela específica para NPC 2
+    TELA_NPC_3 = 8,     // NOVO: Tela específica para NPC 3
     TELA_SAIR = 9
 } EstadoDoJogo;
 
 // Variáveis Globais
 EstadoDoJogo estado_atual = TELA_MENU;
+int current_npc_id = -1; // ID do NPC com o qual estamos interagindo (-1 = nenhum)
+bool can_interact = false; // Flag para mostrar o prompt de confirmação
 
 // Bitmaps do Menu/Mapa
 ALLEGRO_BITMAP* img_menu_fundo = NULL;
 ALLEGRO_BITMAP* img_mapa_fundo = NULL;
 ALLEGRO_BITMAP* img_tutorial_fundo = NULL;
 ALLEGRO_BITMAP* img_quarto_fundo = NULL;
+ALLEGRO_BITMAP* img_npc1_fundo = NULL;
+ALLEGRO_BITMAP* img_npc2_fundo = NULL;
+ALLEGRO_BITMAP* img_npc3_fundo = NULL; 
 
 // ===================================
 // NOVAS VARIÁVEIS DO JOGADOR (SPRITE)
@@ -39,12 +49,21 @@ ALLEGRO_BITMAP* img_player_sprite = NULL;
 float player_pos_x = LARGURA_TELA / 2.0;
 float player_pos_y = ALTURA_TELA / 2.0;
 float player_velocidade = 7.0; // Velocidade em pixels por frame (igual ao seu novo código)
-
+int PLAYER_RAIO = 20;
 float anim_frame = 0.f;          // Contador do frame atual
 int anim_current_frame_y = 63 * 2; // Linha do sprite (Começa olhando para baixo)
 const int FRAME_LARGURA = 155;
 const int FRAME_ALTURA = 134;
 // ===================================
+
+NPC NPC_LIST[MAX_NPCS] = {
+    // ID, X, Y, RAIO
+    { 1, 300, 300, 25 }, // NPC 1: João
+    { 2, 800, 200, 30 }, // NPC 2: Maria
+    { 3, 500, 600, 20 }, // NPC 3: Pedro
+    { 4, 100, 100, 25 }, // NPC 4: (Ocioso)
+    { -1, 0, 0, 0 }      // Slot Vazio (ou use 0 na posição se não usar todos)
+};
 
 // mapeamento de botoes
 CoordenadasBotao INICIAR_BTN = {
@@ -77,6 +96,18 @@ CoordenadasBotao PORTA_AREA = {
     .x2 = 700,
     .y2 = 150
 };
+
+bool check_collision(int x1, int y1, int r1, int x2, int y2, int r2) {
+    // Distância euclidiana ao quadrado
+    int dx = x1 - x2;
+    int dy = y1 - y2;
+    int dist_squared = dx * dx + dy * dy;
+
+    // Raio de colisão somado ao quadrado
+    int radii_sum_squared = (r1 + r2) * (r1 + r2);
+
+    return dist_squared <= radii_sum_squared;
+}
 
 // Vetor de estados das teclas (para movimento contínuo)
 bool key_down[ALLEGRO_KEY_MAX] = { false };
@@ -130,6 +161,8 @@ int carregar_imagens() {
         }
         else return 0;
     }
+
+    //Carrega o fundo do quarto
     img_quarto_fundo = al_load_bitmap("quarto_fundo.png");
     if (!img_quarto_fundo) {
         fprintf(stderr, "ERRO: Nao foi possivel carregar quarto_fundo.png. Usando cor simples.\n");
@@ -141,6 +174,46 @@ int carregar_imagens() {
         }
         else return 0;
     }
+
+    // Carrega fundos de NPC (Simulação de tela 1, 2 e 3)
+    img_npc1_fundo = al_load_bitmap("npc1_fundo.png");
+    if (!img_npc1_fundo) {
+        fprintf(stderr, "ERRO: Não foi possível carregar npc1_fundo.png. Usando cor simples.\n");
+        img_npc1_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
+        if (img_npc1_fundo) {
+            al_set_target_bitmap(img_npc1_fundo);
+            al_clear_to_color(al_map_rgb(255, 150, 150)); // Vermelho Claro
+            al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
+        }
+        else return 0;
+    }
+
+    // ... (Repetir para img_npc2_fundo - Verde Claro 150, 255, 150)
+    img_npc2_fundo = al_load_bitmap("npc2_fundo.png");
+    if (!img_npc2_fundo) { /* ... lógica de erro com al_map_rgb(150, 255, 150) ... */
+        fprintf(stderr, "ERRO: Não foi possível carregar npc2_fundo.png. Usando cor simples.\n");
+        img_npc2_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
+        if (img_npc2_fundo) {
+            al_set_target_bitmap(img_npc2_fundo);
+            al_clear_to_color(al_map_rgb(150, 255, 150));
+            al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
+        }
+        else return 0;
+    }
+
+    // ... (Repetir para img_npc3_fundo - Azul Claro 150, 150, 255)
+    img_npc3_fundo = al_load_bitmap("npc3_fundo.png");
+    if (!img_npc3_fundo) { /* ... lógica de erro com al_map_rgb(150, 150, 255) ... */
+        fprintf(stderr, "ERRO: Não foi possível carregar npc3_fundo.png. Usando cor simples.\n");
+        img_npc3_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
+        if (img_npc3_fundo) {
+            al_set_target_bitmap(img_npc3_fundo);
+            al_clear_to_color(al_map_rgb(150, 150, 255));
+            al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
+        }
+        else return 0;
+    }
+
     return 1; // Sucesso
 }
 
@@ -150,6 +223,9 @@ void limpar_recursos() {
     if (img_player_sprite) al_destroy_bitmap(img_player_sprite);
     if (img_tutorial_fundo) al_destroy_bitmap(img_tutorial_fundo);
     if (img_quarto_fundo) al_destroy_bitmap(img_quarto_fundo);
+    if (img_npc1_fundo) al_destroy_bitmap(img_npc1_fundo);
+    if (img_npc2_fundo) al_destroy_bitmap(img_npc2_fundo);
+    if (img_npc3_fundo) al_destroy_bitmap(img_npc3_fundo);
 }
 
 
@@ -263,6 +339,21 @@ int main() {
             if (ev.keyboard.keycode < ALLEGRO_KEY_MAX) {
                 key_down[ev.keyboard.keycode] = true;
             }
+            if (estado_atual == TELA_JOGO) {
+                // Exemplo de tecla 'E' para interagir
+                if (ev.keyboard.keycode == ALLEGRO_KEY_E) {
+                    if (can_interact && current_npc_id != -1) {
+                        // MUDANÇA: Usar o ID do NPC para definir o estado
+                        switch (current_npc_id) {
+                        case 1: estado_atual = TELA_NPC_1; break;
+                        case 2: estado_atual = TELA_NPC_2; break;
+                        case 3: estado_atual = TELA_NPC_3; break;
+                        default: estado_atual = TELA_JOGO; break; // Ignora se ID for desconhecido
+                        }
+                        printf("Iniciando dialogo com NPC ID: %d. Tela: %d\n", current_npc_id, estado_atual);
+                    }
+                }
+            }
         }
         else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
             // Lógica do ESC
@@ -273,6 +364,13 @@ int main() {
                 }
                 else if (estado_atual == TELA_MENU) {
                     rodando = false;
+                }
+            }
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+                if (estado_atual == TELA_NPC_1 || estado_atual == TELA_NPC_2 || estado_atual == TELA_NPC_3) { // MUDANÇA AQUI
+                    estado_atual = TELA_JOGO; // Volta para o mapa
+                    current_npc_id = -1;
+                    printf("Saindo do dialogo. Voltando para o Jogo.\n");
                 }
             }
             // Liberação da tecla
@@ -323,6 +421,30 @@ int main() {
                 if (player_pos_y < 0) player_pos_y = 0;
                 if (player_pos_y > ALTURA_TELA - FRAME_ALTURA) player_pos_y = ALTURA_TELA - FRAME_ALTURA;
             }
+            // Reset das flags de interação
+            can_interact = false;
+            current_npc_id = -1;
+
+            // --- Lógica de Interação/Colisão de NPCs (APENAS em TELA_JOGO) ---
+            if (estado_atual == TELA_JOGO) {
+                for (int i = 0; i < MAX_NPCS; i++) {
+                    if (NPC_LIST[i].id != -1) { // Checa se o slot está em uso
+
+                        int player_center_x = player_pos_x + FRAME_LARGURA / 2;
+                        int player_center_y = player_pos_y + FRAME_ALTURA / 2;
+
+                        if (check_collision(player_center_x, player_center_y, PLAYER_RAIO,
+                            NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio))
+                        {
+                            // Colisão detectada!
+                            can_interact = true;
+                            current_npc_id = NPC_LIST[i].id;
+                            break;
+                        }
+                    }
+                }
+            }
+
             // --- Fim da Lógica de Atualização ---
 
 
@@ -345,6 +467,13 @@ int main() {
                 // Desenhar Porta (para debug visual)
                 al_draw_filled_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(10, 10, 10));
                 if (img_player_sprite) {
+                    al_draw_circle(
+                        player_pos_x + FRAME_LARGURA / 2,
+                        player_pos_y + FRAME_ALTURA / 2,
+                        PLAYER_RAIO,
+                        al_map_rgb(255, 0, 255), // Cor Magenta
+                        2 // Espessura
+                    );
                     al_draw_bitmap_region(
                         img_player_sprite,
                         FRAME_LARGURA * (int)anim_frame, // Posição X na folha de sprites
@@ -365,9 +494,29 @@ int main() {
 
             case TELA_JOGO:
                 al_draw_bitmap(img_mapa_fundo, 0, 0, 0);
+                for (int i = 0; i < MAX_NPCS; i++) {
+                    if (NPC_LIST[i].id != -1) {
+                        // Cor do NPC: Verde se em colisão, Cinza se não
+                        ALLEGRO_COLOR cor_npc = al_map_rgb(150, 150, 150);
+                        if (can_interact && current_npc_id == NPC_LIST[i].id) {
+                            cor_npc = al_map_rgb(255, 0, 0); // Fica Vermelho ao colidir
 
+                            // Desenha o prompt de interação (Ex: Aperte E)
+                            // Você precisará de uma fonte para isso!
+                            // al_draw_text(sua_fonte, al_map_rgb(255, 255, 255), jogador_x, jogador_y - 40, ALLEGRO_ALIGN_CENTER, "APERTAR E");
+                        }
+                        al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
+                    }
+                }
                 // === DESENHO DO SPRITE ===
                 if (img_player_sprite) {
+                    al_draw_circle(
+                        player_pos_x + FRAME_LARGURA / 2,
+                        player_pos_y + FRAME_ALTURA / 2,
+                        PLAYER_RAIO,
+                        al_map_rgb(255, 0, 255), // Cor Magenta
+                        2 // Espessura
+                    );
                     al_draw_bitmap_region(
                         img_player_sprite,
                         FRAME_LARGURA * (int)anim_frame, // Posição X na folha de sprites
@@ -383,6 +532,24 @@ int main() {
                     // Desenha um quadrado vermelho substituto se o sprite falhar
                     al_draw_filled_rectangle(player_pos_x, player_pos_y, player_pos_x + FRAME_LARGURA, player_pos_y + FRAME_ALTURA, al_map_rgb(255, 0, 0));
                 }
+                break;
+
+            case TELA_NPC_1: // TELA 1 (NPC João)
+                al_draw_bitmap(img_npc1_fundo, 0, 0, 0);
+                // Botão de Sair (FECHAR_BTN)
+                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                break;
+
+            case TELA_NPC_2: // TELA 2 (NPC Maria)
+                al_draw_bitmap(img_npc2_fundo, 0, 0, 0);
+                // Botão de Sair (FECHAR_BTN)
+                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                break;
+
+            case TELA_NPC_3: // TELA 3 (NPC Pedro)
+                al_draw_bitmap(img_npc3_fundo, 0, 0, 0);
+                // Botão de Sair (FECHAR_BTN)
+                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 break;
 
             case TELA_TUTORIAL:
