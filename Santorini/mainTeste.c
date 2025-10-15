@@ -38,7 +38,8 @@ ALLEGRO_BITMAP* img_tutorial_fundo = NULL;
 ALLEGRO_BITMAP* img_quarto_fundo = NULL;
 ALLEGRO_BITMAP* img_mercado_fundo = NULL;
 ALLEGRO_BITMAP* img_cassino_fundo = NULL;
-ALLEGRO_BITMAP* img_banco_fundo = NULL; 
+ALLEGRO_BITMAP* img_banco_fundo = NULL;
+ALLEGRO_BITMAP* img_fim_dia_fundo = NULL;
 
 // ===================================
 // NOVAS VARIÁVEIS DO JOGADOR (SPRITE)
@@ -213,6 +214,17 @@ int carregar_imagens() {
         }
         else return 0;
     }
+    img_fim_dia_fundo = al_load_bitmap("fim_dia_fundo.png");
+    if (!img_fim_dia_fundo) { /* ... lógica de erro com al_map_rgb(150, 150, 255) ... */
+        fprintf(stderr, "ERRO: Não foi possível carregar banco_fundo.png. Usando cor simples.\n");
+        img_fim_dia_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
+        if (img_fim_dia_fundo) {
+            al_set_target_bitmap(img_fim_dia_fundo);
+            al_clear_to_color(al_map_rgb(150, 150, 255));
+            al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
+        }
+        else return 0;
+    }
 
     return 1; // Sucesso
 }
@@ -226,6 +238,7 @@ void limpar_recursos() {
     if (img_mercado_fundo) al_destroy_bitmap(img_mercado_fundo);
     if (img_cassino_fundo) al_destroy_bitmap(img_cassino_fundo);
     if (img_banco_fundo) al_destroy_bitmap(img_banco_fundo);
+    if (img_fim_dia_fundo) al_destroy_bitmap(img_fim_dia_fundo);
 }
 
 
@@ -565,8 +578,8 @@ int main() {
 
             case TELA_FIM_DIA: // NOVO
                 // Desenhar fundo da tela final
-                // al_draw_bitmap(img_fim_dia_fundo, 0, 0, 0);
-                al_clear_to_color(al_map_rgb(20, 20, 20)); // Fundo de Fim de Dia Escuro
+                al_draw_bitmap(img_fim_dia_fundo, 0, 0, 0);
+                //al_clear_to_color(al_map_rgb(20, 20, 20)); // Fundo de Fim de Dia Escuro
 
                 // Desenhar botão para continuar/voltar (usando o FECHAR_BTN)
                 al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(255, 255, 0));
