@@ -493,8 +493,8 @@ int main() {
             switch (estado_atual) {
             case TELA_MENU:
                 al_draw_bitmap(img_menu_fundo, 0, 0, 0);
-                al_draw_filled_rectangle(INICIAR_BTN.x1, INICIAR_BTN.y1, INICIAR_BTN.x2, INICIAR_BTN.y2, al_map_rgb(50, 200, 50));
-                al_draw_filled_rectangle(TUTORIAL_BTN.x1, TUTORIAL_BTN.y1, TUTORIAL_BTN.x2, TUTORIAL_BTN.y2, al_map_rgb(50, 200, 50));
+                //al_draw_filled_rectangle(INICIAR_BTN.x1, INICIAR_BTN.y1, INICIAR_BTN.x2, INICIAR_BTN.y2, al_map_rgb(50, 200, 50));
+                //al_draw_filled_rectangle(TUTORIAL_BTN.x1, TUTORIAL_BTN.y1, TUTORIAL_BTN.x2, TUTORIAL_BTN.y2, al_map_rgb(50, 200, 50));
                 break;
 
             case TELA_QUARTO: // NOVO
@@ -502,17 +502,17 @@ int main() {
                 al_draw_bitmap(img_quarto_fundo, 0, 0, 0);
                 //al_clear_to_color(al_map_rgb(100, 50, 50)); // Fundo de Quarto Simples
                 // Desenhar Cama (para debug visual)
-                al_draw_filled_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(150, 150, 150));
+                //al_draw_filled_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(150, 150, 150));
                 // Desenhar Porta (para debug visual)
-                al_draw_filled_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(10, 10, 10));
+                //al_draw_filled_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(10, 10, 10));
                 if (img_player_sprite) {
-                    al_draw_circle(
+                    /*al_draw_circle(
                         player_pos_x + FRAME_LARGURA / 2,
                         player_pos_y + FRAME_ALTURA / 2,
                         PLAYER_RAIO,
                         al_map_rgb(255, 0, 255), // Cor Magenta
                         2 // Espessura
-                    );
+                    );*/
                     al_draw_bitmap_region(
                         img_player_sprite,
                         FRAME_LARGURA * (int)anim_frame, // Posição X na folha de sprites
@@ -526,7 +526,7 @@ int main() {
                 }
                 else {
                     // Desenha um quadrado vermelho substituto se o sprite falhar
-                    al_draw_filled_rectangle(player_pos_x, player_pos_y, player_pos_x + FRAME_LARGURA, player_pos_y + FRAME_ALTURA, al_map_rgb(255, 0, 0));
+                    //al_draw_filled_rectangle(player_pos_x, player_pos_y, player_pos_x + FRAME_LARGURA, player_pos_y + FRAME_ALTURA, al_map_rgb(255, 0, 0));
                 }
                 break;
                 break;
@@ -544,18 +544,18 @@ int main() {
                             // Você precisará de uma fonte para isso!
                             // al_draw_text(sua_fonte, al_map_rgb(255, 255, 255), jogador_x, jogador_y - 40, ALLEGRO_ALIGN_CENTER, "APERTAR E");
                         }
-                        al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
+                        //al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
                     }
                 }
                 // === DESENHO DO SPRITE ===
                 if (img_player_sprite) {
-                    al_draw_circle(
+                    /*al_draw_circle(
                         player_pos_x + FRAME_LARGURA / 2,
                         player_pos_y + FRAME_ALTURA / 2,
                         PLAYER_RAIO,
                         al_map_rgb(255, 0, 255), // Cor Magenta
                         2 // Espessura
-                    );
+                    );*/
                     al_draw_bitmap_region(
                         img_player_sprite,
                         FRAME_LARGURA * (int)anim_frame, // Posição X na folha de sprites
@@ -569,7 +569,7 @@ int main() {
                 }
                 else {
                     // Desenha um quadrado vermelho substituto se o sprite falhar
-                    al_draw_filled_rectangle(player_pos_x, player_pos_y, player_pos_x + FRAME_LARGURA, player_pos_y + FRAME_ALTURA, al_map_rgb(255, 0, 0));
+                    //al_draw_filled_rectangle(player_pos_x, player_pos_y, player_pos_x + FRAME_LARGURA, player_pos_y + FRAME_ALTURA, al_map_rgb(255, 0, 0));
                 }
                 break;
 
@@ -606,7 +606,7 @@ int main() {
                 //al_clear_to_color(al_map_rgb(20, 20, 20)); // Fundo de Fim de Dia Escuro
 
                 // Desenhar botão para continuar/voltar (usando o FECHAR_BTN)
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(255, 255, 0));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(255, 255, 0));
                 // al_draw_text(seu_font, al_map_rgb(0,0,0), 640, 575, ALLEGRO_ALIGN_CENTER, "NOVO DIA");
                 break;
 
