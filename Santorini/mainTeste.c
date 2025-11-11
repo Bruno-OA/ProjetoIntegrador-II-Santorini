@@ -45,7 +45,7 @@ typedef struct {
 } CoordenadasBotao;
 
 // =================================================================
-// ESTRUTURAS E DADOS DE INVESTIMENTO (NOVAS)
+// ESTRUTURAS E DADOS DE INVESTIMENTO
 // =================================================================
 #define MAX_INVESTMENTS 3
 
@@ -70,6 +70,31 @@ InvestmentOption INVESTMENT_OPTIONS[] = {
     {3, "Alto Risco (+75%% | 7 dias)", 0.75f, 7, 200}
 };
 ActiveInvestment active_investments[MAX_INVESTMENTS] = { 0 };
+
+// =================================================================
+// ESTRUTURAS E DADOS DE COMIDA (NOVAS)
+// =================================================================
+#define MAX_FOOD_ITEMS 8
+
+typedef struct {
+    const char* nome;
+    int custo;
+    float ganho_fome;
+} FoodItem;
+
+FoodItem FOOD_OPTIONS[MAX_FOOD_ITEMS] = {
+    {"Pães",          10,                 5.0f},
+    {"Berinjela",     20,                 15.0f},
+    {"Tomate",        30,                 10.0f},
+    {"Uva",           40,                 20.0f},
+    {"Queijo",        50,                 30.0f},
+    {"Alcaparras",    70,                 25.0f},
+    {"Peixe",         100,                50.0f},
+    {"Figo",          120,                40.0f}
+};
+
+// Mapeamento dinâmico dos botões de comida (coordenadas serão calculadas no desenho)
+CoordenadasBotao FOOD_BTN[MAX_FOOD_ITEMS];
 
 
 // =================================================================
@@ -110,7 +135,7 @@ NPC NPC_LIST[MAX_NPCS] = {
     { -1, 0, 0, 0 }
 };
 
-// Mapeamento de Botões (INCLUI NOVOS DO BANCO)
+// Mapeamento de Botões
 CoordenadasBotao INICIAR_BTN = { .x1 = 480, .y1 = 420, .x2 = 848, .y2 = 510 };
 CoordenadasBotao TUTORIAL_BTN = { .x1 = 480, .y1 = 545, .x2 = 848, .y2 = 630 };
 CoordenadasBotao FECHAR_BTN = { .x1 = 1100, .y1 = 50, .x2 = 1250, .y2 = 100 };
@@ -153,18 +178,35 @@ void desenhar_hud_texto() {
     al_draw_textf(fonte_hud, al_map_rgb(255, 200, 200), 20, 140, 0, "Dias sem comer: %d", dias_sem_comer);
 }
 
-// Funções mock (substitua com a sua lógica se necessário)
+// ============== LÓGICA DE SIMULAÇÃO ==============
+
 void comer(int custo, float ganho_fome) {
-    if (dinheiro >= custo) { dinheiro -= custo; fome += ganho_fome; if (fome > 100.0f) fome = 100.0f; }
+    if (dinheiro >= custo) {
+        dinheiro -= custo;
+        gasto_dia += custo;
+        fome += ganho_fome;
+        if (fome > 100.0f) fome = 100.0f;
+        printf("Comeu: -%d dinheiro, +%.1f fome (fome=%.1f)\n", custo, ganho_fome, fome);
+    }
+    else {
+        printf("Dinheiro insuficiente para comer!\n");
+    }
 }
 void trabalhar(int ganho, float custo_energia) {
-    if (energia >= custo_energia) { energia -= custo_energia; dinheiro += ganho; }
+    if (energia >= custo_energia) {
+        energia -= custo_energia;
+        dinheiro += ganho;
+        ganho_dia += ganho;
+    }
 }
 void apostar(int valor) {
-    if (dinheiro >= valor) { int resultado = rand() % 2; if (resultado == 1) dinheiro += valor; else dinheiro -= valor; }
+    if (dinheiro >= valor) {
+        int resultado = rand() % 2;
+        if (resultado == 1) dinheiro += valor; else dinheiro -= valor;
+    }
 }
 
-// ============== LÓGICA DO BANCO (FUNÇÕES) ==============
+// ============== LÓGICA DO BANCO ==============
 int find_free_slot() {
     for (int i = 0; i < MAX_INVESTMENTS; i++) {
         if (!active_investments[i].active) { return i; }
@@ -240,7 +282,6 @@ void limpar_recursos() {
     if (img_cassino_fundo) al_destroy_bitmap(img_cassino_fundo);
     if (img_banco_fundo) al_destroy_bitmap(img_banco_fundo);
     if (img_fim_dia_fundo) al_destroy_bitmap(img_fim_dia_fundo);
-    if (fonte_hud) al_destroy_font(fonte_hud);
 }
 
 // =====================================================================
@@ -311,7 +352,21 @@ int main() {
             }
 
             // ===================================
-            // LÓGICA DE BOTÕES DO BANCO (TELA_BANCO)
+            // LÓGICA DE COMPRA DO MERCADINHO (NOVA)
+            // ===================================
+            else if (estado_atual == TELA_MERCADO) {
+                for (int i = 0; i < MAX_FOOD_ITEMS; i++) {
+                    if (ev.mouse.x >= FOOD_BTN[i].x1 && ev.mouse.x <= FOOD_BTN[i].x2 &&
+                        ev.mouse.y >= FOOD_BTN[i].y1 && ev.mouse.y <= FOOD_BTN[i].y2) {
+
+                        comer(FOOD_OPTIONS[i].custo, FOOD_OPTIONS[i].ganho_fome);
+                        break;
+                    }
+                }
+            }
+
+            // ===================================
+            // LÓGICA DE BOTÕES DO BANCO
             // ===================================
             else if (estado_atual == TELA_BANCO) {
                 // 1. Tentar INVESTIR nas Opções 1, 2, 3
@@ -495,7 +550,59 @@ int main() {
                 break;
 
             case TELA_MERCADO:
-                al_draw_bitmap(img_mercado_fundo, 0, 0, 0); desenhar_hud_texto(); break;
+            {
+                ALLEGRO_COLOR COR_TEXTO = al_map_rgb(0, 0, 0);
+
+                al_draw_bitmap(img_mercado_fundo, 0, 0, 0);
+
+                // Título
+                al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Mercadinho: Saldo R$ %d", dinheiro);
+                al_draw_textf(fonte_hud, COR_TEXTO, 50, 80, 0, "Clique para Comprar:");
+
+                int start_x = 50;
+                int start_y = 120;
+                int btn_largura = 180;
+                int btn_altura = 60;
+                int colunas = 4;
+                int espacamento_x = 20;
+                int espacamento_y = 20;
+
+                for (int i = 0; i < MAX_FOOD_ITEMS; i++) {
+                    int col = i % colunas;
+                    int row = i / colunas;
+
+                    int x1 = start_x + (col * (btn_largura + espacamento_x));
+                    int y1 = start_y + (row * (btn_altura + espacamento_y));
+                    int x2 = x1 + btn_largura;
+                    int y2 = y1 + btn_altura;
+
+                    // Mapeia a coordenada do botão (para ser usada no clique)
+                    FOOD_BTN[i].x1 = x1;
+                    FOOD_BTN[i].y1 = y1;
+                    FOOD_BTN[i].x2 = x2;
+                    FOOD_BTN[i].y2 = y2;
+
+                    bool tem_dinheiro = (dinheiro >= FOOD_OPTIONS[i].custo);
+                    ALLEGRO_COLOR cor_fundo = tem_dinheiro ? al_map_rgb(0, 100, 0) : al_map_rgb(50, 50, 50);
+                    ALLEGRO_COLOR cor_alerta = tem_dinheiro ? al_map_rgb(255, 255, 255) : al_map_rgb(255, 100, 100);
+
+                    // Desenha o botão
+                    al_draw_filled_rectangle(x1, y1, x2, y2, cor_fundo);
+
+                    // Desenha o Nome
+                    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x1 + 10, y1 + 5, 0, "%s", FOOD_OPTIONS[i].nome);
+
+                    // Desenha o Preço e Ganho de Fome
+                    al_draw_textf(fonte_hud, cor_alerta, x1 + 10, y1 + 25, 0,
+                        "R$%d | Fome: +%.0f%%",
+                        FOOD_OPTIONS[i].custo,
+                        FOOD_OPTIONS[i].ganho_fome);
+                }
+
+                desenhar_hud_texto();
+                break;
+            }
+
             case TELA_CASSINO:
                 al_draw_bitmap(img_cassino_fundo, 0, 0, 0); desenhar_hud_texto(); break;
 
