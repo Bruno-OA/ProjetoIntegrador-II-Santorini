@@ -9,7 +9,7 @@
 #include <allegro5/allegro_ttf.h>
 #include <math.h>
 #include <stdbool.h>
-#include <string.h> // Necessário para memset
+#include <string.h> 
 
 // Definições de Tela
 #define LARGURA_TELA 1280
@@ -72,7 +72,7 @@ InvestmentOption INVESTMENT_OPTIONS[] = {
 ActiveInvestment active_investments[MAX_INVESTMENTS] = { 0 };
 
 // =================================================================
-// ESTRUTURAS E DADOS DE COMIDA (NOVAS)
+// ESTRUTURAS E DADOS DE COMIDA
 // =================================================================
 #define MAX_FOOD_ITEMS 8
 
@@ -92,8 +92,6 @@ FoodItem FOOD_OPTIONS[MAX_FOOD_ITEMS] = {
     {"Peixe",         100,                50.0f},
     {"Figo",          120,                40.0f}
 };
-
-// Mapeamento dinâmico dos botões de comida (coordenadas serão calculadas no desenho)
 CoordenadasBotao FOOD_BTN[MAX_FOOD_ITEMS];
 
 
@@ -126,6 +124,13 @@ int anim_current_frame_y = 90 * 2;
 const int FRAME_LARGURA = 95;
 const int FRAME_ALTURA = 180;
 
+// Variáveis do Cassino (NOVAS)
+int aposta_valor = 50;
+const int MIN_APOSTA = 50;
+const int MAX_APOSTA = 500;
+bool aposta_resultado_exibir = false;
+bool aposta_ganhou = false;
+
 // NPCs
 NPC NPC_LIST[MAX_NPCS] = {
     { 1, 250, 100, 30 },
@@ -135,7 +140,7 @@ NPC NPC_LIST[MAX_NPCS] = {
     { -1, 0, 0, 0 }
 };
 
-// Mapeamento de Botões
+// Mapeamento de Botões (INCLUI NOVOS DO CASSINO)
 CoordenadasBotao INICIAR_BTN = { .x1 = 480, .y1 = 420, .x2 = 848, .y2 = 510 };
 CoordenadasBotao TUTORIAL_BTN = { .x1 = 480, .y1 = 545, .x2 = 848, .y2 = 630 };
 CoordenadasBotao FECHAR_BTN = { .x1 = 1100, .y1 = 50, .x2 = 1250, .y2 = 100 };
@@ -144,6 +149,10 @@ CoordenadasBotao PORTA_AREA = { .x1 = 920, .y1 = 300, .x2 = 1000, .y2 = 550 };
 CoordenadasBotao INVEST_BTN_1 = { .x1 = 900, .y1 = 200, .x2 = 1200, .y2 = 250 };
 CoordenadasBotao INVEST_BTN_2 = { .x1 = 900, .y1 = 270, .x2 = 1200, .y2 = 320 };
 CoordenadasBotao INVEST_BTN_3 = { .x1 = 900, .y1 = 340, .x2 = 1200, .y2 = 390 };
+CoordenadasBotao BET_BTN = { .x1 = 500, .y1 = 600, .x2 = 780, .y2 = 650 };
+CoordenadasBotao UP_BTN = { .x1 = 690, .y1 = 500, .x2 = 780, .y2 = 540 };
+CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 500, .x2 = 590, .y2 = 540 };
+
 
 // Variáveis de Jogo (Fome/Energia são float)
 int dia_atual = 1;
@@ -199,11 +208,34 @@ void trabalhar(int ganho, float custo_energia) {
         ganho_dia += ganho;
     }
 }
-void apostar(int valor) {
-    if (dinheiro >= valor) {
-        int resultado = rand() % 2;
-        if (resultado == 1) dinheiro += valor; else dinheiro -= valor;
+// FUNÇÃO APOSTAR CORRIGIDA E ATUALIZADA
+void apostar(int valor, int* dinheiro_ptr, int* ganho_dia_ptr, int* gasto_dia_ptr, bool* resultado_exibir_ptr, bool* ganhou_ptr) {
+    if (*dinheiro_ptr < valor) {
+        printf("Dinheiro insuficiente para apostar R$%d!\n", valor);
+        *resultado_exibir_ptr = true;
+        *ganhou_ptr = false;
+        return;
     }
+
+    // Gerar um número entre 0 e 99 (20% de chance de vitória)
+    int probabilidade = rand() % 100;
+
+    if (probabilidade < 1) {
+        // GANHOU (Paga 2x o valor apostado)
+        *dinheiro_ptr += valor;
+        *ganho_dia_ptr += valor;
+        *ganhou_ptr = true;
+        printf("Ganhou aposta! +R$%d dinheiro (Probabilidade: %d%%)\n", valor, probabilidade);
+    }
+    else {
+        // PERDEU
+        *dinheiro_ptr -= valor;
+        *gasto_dia_ptr += valor;
+        *ganhou_ptr = false;
+        printf("Perdeu aposta! -R$%d dinheiro (Probabilidade: %d%%)\n", valor, probabilidade);
+    }
+
+    *resultado_exibir_ptr = true;
 }
 
 // ============== LÓGICA DO BANCO ==============
@@ -352,7 +384,7 @@ int main() {
             }
 
             // ===================================
-            // LÓGICA DE COMPRA DO MERCADINHO (NOVA)
+            // LÓGICA DE COMPRA DO MERCADINHO
             // ===================================
             else if (estado_atual == TELA_MERCADO) {
                 for (int i = 0; i < MAX_FOOD_ITEMS; i++) {
@@ -421,6 +453,34 @@ int main() {
                     }
                 }
             }
+
+            // ===================================
+            // LÓGICA DE BOTÕES DO CASSINO
+            // ===================================
+            else if (estado_atual == TELA_CASSINO) {
+                // 1. Botão APOSTAR / GIRAR
+                if (ev.mouse.x >= BET_BTN.x1 && ev.mouse.x <= BET_BTN.x2 &&
+                    ev.mouse.y >= BET_BTN.y1 && ev.mouse.y <= BET_BTN.y2) {
+
+                    apostar(aposta_valor, &dinheiro, &ganho_dia, &gasto_dia, &aposta_resultado_exibir, &aposta_ganhou);
+                }
+                // 2. Botão AUMENTAR (+)
+                else if (ev.mouse.x >= UP_BTN.x1 && ev.mouse.x <= UP_BTN.x2 &&
+                    ev.mouse.y >= UP_BTN.y1 && ev.mouse.y <= UP_BTN.y2) {
+                    if (aposta_valor < MAX_APOSTA) {
+                        aposta_valor += MIN_APOSTA;
+                        printf("Aposta aumentada para R$%d\n", aposta_valor);
+                    }
+                }
+                // 3. Botão DIMINUIR (-)
+                else if (ev.mouse.x >= DOWN_BTN.x1 && ev.mouse.x <= DOWN_BTN.x2 &&
+                    ev.mouse.y >= DOWN_BTN.y1 && ev.mouse.y <= DOWN_BTN.y2) {
+                    if (aposta_valor > MIN_APOSTA) {
+                        aposta_valor -= MIN_APOSTA;
+                        printf("Aposta diminuída para R$%d\n", aposta_valor);
+                    }
+                }
+            }
         }
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (ev.keyboard.keycode < ALLEGRO_KEY_MAX) { key_down[ev.keyboard.keycode] = true; }
@@ -440,7 +500,7 @@ int main() {
                         if (estado_atual == TELA_JOGO && current_npc_id != -1) {
                             switch (current_npc_id) {
                             case 1: estado_atual = TELA_MERCADO; break;
-                            case 2: estado_atual = TELA_CASSINO; break;
+                            case 2: estado_atual = TELA_CASSINO; break; // CASSINO
                             case 3: estado_atual = TELA_BANCO; break;
                             case 4: estado_atual = TELA_QUARTO; break;
                             default: estado_atual = TELA_JOGO; break;
@@ -480,6 +540,12 @@ int main() {
         }
 
         else if (ev.type == ALLEGRO_EVENT_TIMER) {
+
+            // Lógica para esconder resultado da aposta
+            if (estado_atual != TELA_CASSINO) {
+                aposta_resultado_exibir = false;
+            }
+
             if (fome <= 0.0f || dias_sem_comer >= 3) { estado_atual = TELA_SAIR; }
 
             if (estado_atual == TELA_JOGO || estado_atual == TELA_QUARTO) {
@@ -555,7 +621,6 @@ int main() {
 
                 al_draw_bitmap(img_mercado_fundo, 0, 0, 0);
 
-                // Título
                 al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Mercadinho: Saldo R$ %d", dinheiro);
                 al_draw_textf(fonte_hud, COR_TEXTO, 50, 80, 0, "Clique para Comprar:");
 
@@ -576,23 +641,16 @@ int main() {
                     int x2 = x1 + btn_largura;
                     int y2 = y1 + btn_altura;
 
-                    // Mapeia a coordenada do botão (para ser usada no clique)
-                    FOOD_BTN[i].x1 = x1;
-                    FOOD_BTN[i].y1 = y1;
-                    FOOD_BTN[i].x2 = x2;
-                    FOOD_BTN[i].y2 = y2;
+                    FOOD_BTN[i].x1 = x1; FOOD_BTN[i].y1 = y1; FOOD_BTN[i].x2 = x2; FOOD_BTN[i].y2 = y2;
 
                     bool tem_dinheiro = (dinheiro >= FOOD_OPTIONS[i].custo);
                     ALLEGRO_COLOR cor_fundo = tem_dinheiro ? al_map_rgb(0, 100, 0) : al_map_rgb(50, 50, 50);
                     ALLEGRO_COLOR cor_alerta = tem_dinheiro ? al_map_rgb(255, 255, 255) : al_map_rgb(255, 100, 100);
 
-                    // Desenha o botão
                     al_draw_filled_rectangle(x1, y1, x2, y2, cor_fundo);
 
-                    // Desenha o Nome
                     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x1 + 10, y1 + 5, 0, "%s", FOOD_OPTIONS[i].nome);
 
-                    // Desenha o Preço e Ganho de Fome
                     al_draw_textf(fonte_hud, cor_alerta, x1 + 10, y1 + 25, 0,
                         "R$%d | Fome: +%.0f%%",
                         FOOD_OPTIONS[i].custo,
@@ -604,23 +662,54 @@ int main() {
             }
 
             case TELA_CASSINO:
-                al_draw_bitmap(img_cassino_fundo, 0, 0, 0); desenhar_hud_texto(); break;
+            {
+                al_draw_bitmap(img_cassino_fundo, 0, 0, 0);
+                ALLEGRO_COLOR COR_TEXTO_PADRAO = al_map_rgb(255, 255, 255);
+
+                // 1. Título e Saldo
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 50, ALLEGRO_ALIGN_CENTER, "CASSINO (20%% Chance de Ganho)");
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 90, ALLEGRO_ALIGN_CENTER, "Seu Saldo: R$%d", dinheiro);
+
+                // 2. Campo de Aposta (Valor Atual)
+                al_draw_filled_rectangle(500, 500, 780, 540, al_map_rgb(20, 20, 20));
+                al_draw_textf(fonte_hud, al_map_rgb(255, 255, 0), 640, 510, ALLEGRO_ALIGN_CENTER, "APOSTA: R$%d", aposta_valor);
+
+                // 3. Botões de Controle de Aposta
+                al_draw_filled_rectangle(UP_BTN.x1, UP_BTN.y1, UP_BTN.x2, UP_BTN.y2, al_map_rgb(0, 100, 0));
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, UP_BTN.x1 + 45, UP_BTN.y1 + 10, ALLEGRO_ALIGN_CENTER, "+%d", MIN_APOSTA);
+
+                al_draw_filled_rectangle(DOWN_BTN.x1, DOWN_BTN.y1, DOWN_BTN.x2, DOWN_BTN.y2, al_map_rgb(100, 0, 0));
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, DOWN_BTN.x1 + 45, DOWN_BTN.y1 + 10, ALLEGRO_ALIGN_CENTER, "-%d", MIN_APOSTA);
+
+                // 4. Botão GIRAR / Apostar
+                ALLEGRO_COLOR bet_cor = (dinheiro >= aposta_valor) ? al_map_rgb(0, 150, 255) : al_map_rgb(50, 50, 50);
+                al_draw_filled_rectangle(BET_BTN.x1, BET_BTN.y1, BET_BTN.x2, BET_BTN.y2, bet_cor);
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 615, ALLEGRO_ALIGN_CENTER, "GIRAR!");
+
+                // 5. Exibir Resultado
+                if (aposta_resultado_exibir) {
+                    ALLEGRO_COLOR resultado_cor = aposta_ganhou ? al_map_rgb(0, 255, 0) : al_map_rgb(255, 0, 0);
+                    const char* resultado_msg = aposta_ganhou ? "VOCÊ GANHOU! (+R$%d)" : "VOCÊ PERDEU! (-R$%d)";
+
+                    al_draw_textf(fonte_hud, resultado_cor, 640, 400, ALLEGRO_ALIGN_CENTER,
+                        resultado_msg, aposta_valor);
+                }
+
+                desenhar_hud_texto();
+                break;
+            }
 
             case TELA_BANCO:
             {
                 ALLEGRO_COLOR COR_TEXTO = al_map_rgb(0, 0, 0);
                 al_draw_bitmap(img_banco_fundo, 0, 0, 0);
 
-                // 1. Informações Principais
                 al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Saldo Disponível: R$ %d | Dia Atual: %d", dinheiro, dia_atual);
                 al_draw_textf(fonte_hud, COR_TEXTO, 900, 170, ALLEGRO_ALIGN_LEFT, "Opções de Investimento");
 
-                // 2. Desenhar Opções de Investimento (Botões e Status de Saldo)
                 for (int i = 0; i < 3; i++) {
                     CoordenadasBotao btn;
-                    if (i == 0) btn = INVEST_BTN_1;
-                    else if (i == 1) btn = INVEST_BTN_2;
-                    else btn = INVEST_BTN_3;
+                    if (i == 0) btn = INVEST_BTN_1; else if (i == 1) btn = INVEST_BTN_2; else btn = INVEST_BTN_3;
 
                     int custo = INVESTMENT_OPTIONS[i].custo_minimo;
                     bool tem_dinheiro = (dinheiro >= custo);
@@ -633,7 +722,6 @@ int main() {
                     al_draw_textf(fonte_hud, cor_alerta, btn.x1 + 10, btn.y1 + 25, 0, "Custo: R$%d", custo);
                 }
 
-                // 3. Desenhar Investimentos Ativos
                 al_draw_textf(fonte_hud, COR_TEXTO, 50, 420, 0, "Investimentos Ativos (Max: %d):", MAX_INVESTMENTS);
 
                 int y_start = 450;
@@ -647,17 +735,14 @@ int main() {
 
                         int y_offset = y_start + (i * 60);
 
-                        // Coluna 1: Status do Investimento (Lista)
                         al_draw_textf(fonte_hud, COR_TEXTO, 50, y_offset, 0,
                             "[SLOT %d] %s", i + 1, option.nome);
                         al_draw_textf(fonte_hud, COR_TEXTO, 50, y_offset + 20, 0,
                             "   Principal: R$%d | Start: Dia %d", inv->principal, inv->start_day);
 
-                        // Coluna 2: Status de Saque
                         ALLEGRO_COLOR status_cor = ready_to_withdraw ? al_map_rgb(0, 255, 0) : al_map_rgb(255, 255, 0);
                         al_draw_textf(fonte_hud, status_cor, 450, y_offset + 10, 0, ready_to_withdraw ? "PRONTO!" : "Maturidade: Dia %d", maturity_day);
 
-                        // Coluna 3: Botão de Saque (Dinâmico)
                         int btn_x1 = 900;
                         int btn_y1 = y_offset;
                         int btn_x2 = 1200;
