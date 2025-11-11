@@ -5,7 +5,7 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_image.h>
-#include <allegro5/allegro_font.h> // Necessário se for usar o font addon
+#include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
 #include <math.h>
 #include <stdbool.h>
@@ -23,19 +23,18 @@ typedef enum {
     TELA_TUTORIAL = 2,
     TELA_QUARTO = 3,
     TELA_FIM_DIA = 4,
-    //TELA_INTERACAO = 6,
-    TELA_MERCADO = 6,     // NOVO: Tela específica para NPC 1
-    TELA_CASSINO = 7,     // NOVO: Tela específica para NPC 2
-    TELA_BANCO = 8,     // NOVO: Tela específica para NPC 3
+    TELA_MERCADO = 6,
+    TELA_CASSINO = 7,
+    TELA_BANCO = 8,
     TELA_SAIR = 9
 } EstadoDoJogo;
 
 // Variáveis Globais
 EstadoDoJogo estado_atual = TELA_MENU;
-int current_npc_id = -1; // ID do NPC com o qual estamos interagindo (-1 = nenhum)
-bool can_interact = false; // Flag para mostrar o prompt de confirmação
+int current_npc_id = -1;
+bool can_interact = false;
 
-// Bitmaps do Menu/Mapa
+// Bitmaps
 ALLEGRO_BITMAP* img_menu_fundo = NULL;
 ALLEGRO_BITMAP* img_mapa_fundo = NULL;
 ALLEGRO_BITMAP* img_tutorial_fundo = NULL;
@@ -45,113 +44,87 @@ ALLEGRO_BITMAP* img_cassino_fundo = NULL;
 ALLEGRO_BITMAP* img_banco_fundo = NULL;
 ALLEGRO_BITMAP* img_fim_dia_fundo = NULL;
 
-// ===================================
-// NOVAS VARIÁVEIS DO JOGADOR (SPRITE)
-// ===================================
+// Variáveis do Jogador (SPRITE)
 ALLEGRO_BITMAP* img_player_sprite = NULL;
-
-// Variáveis de Posição, Velocidade e Animação
 float player_pos_x = LARGURA_TELA / 2.0;
 float player_pos_y = ALTURA_TELA / 2.0;
-float player_velocidade = 7.0; // Velocidade em pixels por frame (igual ao seu novo código)
+float player_velocidade = 7.0f;
 int PLAYER_RAIO = 50;
-float anim_frame = 0.f;          // Contador do frame atual
-int anim_current_frame_y = 90 * 2; // Linha do sprite (Começa olhando para baixo)
+float anim_frame = 0.f;
+int anim_current_frame_y = 90 * 2;
 const int FRAME_LARGURA = 95;
 const int FRAME_ALTURA = 180;
 int quarto_interact_id = -1;
-// ===================================
 
-// ======================= NPCs / Botões (mantidos) =======================
+// ======================= NPCs / Botões =======================
 NPC NPC_LIST[MAX_NPCS] = {
-    // ID, X, Y, RAIO
-    { 1, 250, 100, 30 }, // NPC 1: João
-    { 2, 650, 100, 30 }, // NPC 2: Maria
-    { 3, 1050, 100, 30 }, // NPC 3: Pedro
-    { 4, 2, 360, 40 }, // NPC 4: (Ocioso)
-    { -1, 0, 0, 0 }      // Slot Vazio (ou use 0 na posição se não usar todos)
+    { 1, 250, 100, 30 },
+    { 2, 650, 100, 30 },
+    { 3, 1050, 100, 30 },
+    { 4, 2, 360, 40 },
+    { -1, 0, 0, 0 }
 };
 
 // mapeamento de botoes
 CoordenadasBotao INICIAR_BTN = {
-    .x1 = 480,
-    .y1 = 420,
-    .x2 = 848,
-    .y2 = 510
+    .x1 = 480, .y1 = 420, .x2 = 848, .y2 = 510
 };
 CoordenadasBotao TUTORIAL_BTN = {
-    .x1 = 480,
-    .y1 = 545,
-    .x2 = 848,
-    .y2 = 630
+    .x1 = 480, .y1 = 545, .x2 = 848, .y2 = 630
 };
 CoordenadasBotao FECHAR_BTN = {
-    .x1 = 1100, // Exemplo: Canto superior esquerdo
-    .y1 = 50,
-    .x2 = 1250,
-    .y2 = 100
+    .x1 = 1100, .y1 = 50, .x2 = 1250, .y2 = 100
 };
 CoordenadasBotao CAMA_AREA = {
-    .x1 = 350,
-    .y1 = 430,
-    .x2 = 570,
-    .y2 = 560
+    .x1 = 350, .y1 = 430, .x2 = 570, .y2 = 560
 };
 CoordenadasBotao PORTA_AREA = {
-    .x1 = 920,
-    .y1 = 300,
-    .x2 = 1000,
-    .y2 = 550
+    .x1 = 920, .y1 = 300, .x2 = 1000, .y2 = 550
 };
 
 bool check_collision(int x1, int y1, int r1, int x2, int y2, int r2) {
-    // Distância euclidiana ao quadrado
     int dx = x1 - x2;
     int dy = y1 - y2;
     int dist_squared = dx * dx + dy * dy;
-
-    // Raio de colisão somado ao quadrado
     int radii_sum_squared = (r1 + r2) * (r1 + r2);
-
     return dist_squared <= radii_sum_squared;
 }
 
-// Vetor de estados das teclas (para movimento contínuo)
+// Vetor de estados das teclas
 bool key_down[ALLEGRO_KEY_MAX] = { false };
 
-// ==================== SISTEMA DE PROGRESSO ====================
-// Dia, fome, energia, dinheiro, contadores do dia
+// ==================== SISTEMA DE PROGRESSO (CORRIGIDO) ====================
 int dia_atual = 1;
-int fome = 100;       // 0 = faminto (morto), 100 = cheio
-int energia = 100;    // 0 = exausto, 100 = descansado
-int dinheiro = 500;   // saldo atual
+float fome = 100.0f;    // CORRIGIDO: float para gasto gradual
+float energia = 100.0f; // CORRIGIDO: float para gasto gradual
+int dinheiro = 500;
 int dias_sem_comer = 0;
-int ganho_dia = 0;    // quanto entrou durante o dia atual
-int gasto_dia = 0;    // quanto saiu durante o dia atual
+int ganho_dia = 0;
+int gasto_dia = 0;
 
 // Fonte para HUD
 ALLEGRO_FONT* fonte_hud = NULL;
 
 // ==================== FUNÇÕES MODULARES ====================
-void comer(int custo, int ganho_fome) {
+void comer(int custo, float ganho_fome) {
     if (dinheiro >= custo) {
         dinheiro -= custo;
         gasto_dia += custo;
         fome += ganho_fome;
-        if (fome > 100) fome = 100;
-        printf("Comeu: -%d dinheiro, +%d fome (fome=%d)\n", custo, ganho_fome, fome);
+        if (fome > 100.0f) fome = 100.0f;
+        printf("Comeu: -%d dinheiro, +%.1f fome (fome=%.1f)\n", custo, ganho_fome, fome);
     }
     else {
         printf("Dinheiro insuficiente para comer!\n");
     }
 }
 
-void trabalhar(int ganho, int custo_energia) {
+void trabalhar(int ganho, float custo_energia) {
     if (energia >= custo_energia) {
         energia -= custo_energia;
         dinheiro += ganho;
         ganho_dia += ganho;
-        printf("Trabalhou: +%d dinheiro, -%d energia (energia=%d)\n", ganho, custo_energia, energia);
+        printf("Trabalhou: +%d dinheiro, -%.1f energia (energia=%.1f)\n", ganho, custo_energia, energia);
     }
     else {
         printf("Energia insuficiente para trabalhar!\n");
@@ -160,7 +133,7 @@ void trabalhar(int ganho, int custo_energia) {
 
 void apostar(int valor) {
     if (dinheiro >= valor) {
-        int resultado = rand() % 2; // 50% chance simples
+        int resultado = rand() % 2;
         if (resultado == 1) {
             dinheiro += valor;
             ganho_dia += valor;
@@ -177,16 +150,16 @@ void apostar(int valor) {
     }
 }
 
-// ==================== HUD (canto superior esquerdo) ====================
+// ==================== HUD (CORRIGIDO: Exibição float -> int) ====================
 void desenhar_hud_texto() {
     if (!fonte_hud) return;
-    char buf[64];
     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 20, 0, "Dia: %d", dia_atual);
     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 50, 0, "Dinheiro: R$ %d", dinheiro);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 80, 0, "Fome: %d%%", fome);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 110, 0, "Energia: %d%%", energia);
 
-    // Se quiser uma linha extra com dias sem comer:
+    // CORRIGIDO: Converte float para int para exibir a porcentagem
+    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 80, 0, "Fome: %d%%", (int)fome);
+    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 110, 0, "Energia: %d%%", (int)energia);
+
     al_draw_textf(fonte_hud, al_map_rgb(255, 200, 200), 20, 140, 0, "Dias sem comer: %d", dias_sem_comer);
 }
 
@@ -218,7 +191,7 @@ int carregar_imagens() {
         else return 0;
     }
 
-    // 3. Carrega o Sprite do Jogador (Substitua "sprite_final.png" pelo caminho correto)
+    // 3. Carrega o Sprite do Jogador
     img_player_sprite = al_load_bitmap("sprite_final.png");
     if (!img_player_sprite) {
         fprintf(stderr, "ERRO: Não foi possível carregar sprite_final.png. O jogador será invisível!\n");
@@ -231,7 +204,7 @@ int carregar_imagens() {
         img_tutorial_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
         if (img_tutorial_fundo) {
             al_set_target_bitmap(img_tutorial_fundo);
-            al_clear_to_color(al_map_rgb(200, 200, 100)); // Fundo Amarelo Claro
+            al_clear_to_color(al_map_rgb(200, 200, 100));
             al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
         }
         else return 0;
@@ -244,20 +217,20 @@ int carregar_imagens() {
         img_quarto_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
         if (img_quarto_fundo) {
             al_set_target_bitmap(img_quarto_fundo);
-            al_clear_to_color(al_map_rgb(100, 50, 50)); // Fundo Marrom/Quarto Simples
+            al_clear_to_color(al_map_rgb(100, 50, 50));
             al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
         }
         else return 0;
     }
 
-    // Carrega fundos de NPC (Simulação de tela 1, 2 e 3)
+    // Carrega fundos de NPC
     img_mercado_fundo = al_load_bitmap("mercado_fundo.png");
     if (!img_mercado_fundo) {
         fprintf(stderr, "ERRO: Não foi possível carregar mercado_fundo.png. Usando cor simples.\n");
         img_mercado_fundo = al_create_bitmap(LARGURA_TELA, ALTURA_TELA);
         if (img_mercado_fundo) {
             al_set_target_bitmap(img_mercado_fundo);
-            al_clear_to_color(al_map_rgb(255, 150, 150)); // Vermelho Claro
+            al_clear_to_color(al_map_rgb(255, 150, 150));
             al_set_target_bitmap(al_get_backbuffer(al_get_current_display()));
         }
         else return 0;
@@ -299,7 +272,7 @@ int carregar_imagens() {
         else return 0;
     }
 
-    return 1; // Sucesso
+    return 1;
 }
 
 void limpar_recursos() {
@@ -328,9 +301,9 @@ int main() {
     al_init_primitives_addon();
     al_install_keyboard();
     al_install_mouse();
-    al_init_image_addon(); // ESSENCIAL para ler PNG/JPG!
-    al_init_font_addon();  // necessário para fontes
-    al_init_ttf_addon();   // TTF fonts
+    al_init_image_addon();
+    al_init_font_addon();
+    al_init_ttf_addon();
 
     ALLEGRO_DISPLAY* janela = al_create_display(LARGURA_TELA, ALTURA_TELA);
     if (!janela) {
@@ -342,17 +315,16 @@ int main() {
     ALLEGRO_EVENT_QUEUE* fila = al_create_event_queue();
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
 
-    // Fonte HUD (tenta TTF, senão builtin)
+    // Fonte HUD
     fonte_hud = al_load_ttf_font("arial.ttf", 18, 0);
     if (!fonte_hud) {
         fonte_hud = al_create_builtin_font();
         if (!fonte_hud) {
             fprintf(stderr, "Falha ao carregar fonte (ttf e builtin falharam).\n");
-            // não é fatal: ainda podemos continuar sem texto
         }
     }
 
-    // Carrega todas as imagens, incluindo o sprite do jogador
+    // Carrega todas as imagens
     if (!carregar_imagens()) {
         fprintf(stderr, "Falha crítica ao inicializar imagens.\n");
         limpar_recursos();
@@ -387,9 +359,8 @@ int main() {
                     ev.mouse.y >= INICIAR_BTN.y1 && ev.mouse.y <= INICIAR_BTN.y2)
                 {
                     estado_atual = TELA_QUARTO;
-
-                    player_pos_x = LARGURA_TELA / 2.0;
-                    player_pos_y = ALTURA_TELA / 2.0;
+                    player_pos_x = (LARGURA_TELA - FRAME_LARGURA) / 2.0;
+                    player_pos_y = (ALTURA_TELA - FRAME_ALTURA) / 2.0;
                     printf("Transição: Menu -> Quarto\n");
                 }
                 // Botão TUTORIAL
@@ -406,7 +377,7 @@ int main() {
                 if (ev.mouse.x >= FECHAR_BTN.x1 && ev.mouse.x <= FECHAR_BTN.x2 &&
                     ev.mouse.y >= FECHAR_BTN.y1 && ev.mouse.y <= FECHAR_BTN.y2)
                 {
-                    estado_atual = TELA_MENU; // Volta para o menu
+                    estado_atual = TELA_MENU;
                     printf("Botão Fechar Clicado: Fim do Dia -> Menu\n");
                 }
             }
@@ -415,26 +386,22 @@ int main() {
                 if (ev.mouse.x >= FECHAR_BTN.x1 && ev.mouse.x <= FECHAR_BTN.x2 &&
                     ev.mouse.y >= FECHAR_BTN.y1 && ev.mouse.y <= FECHAR_BTN.y2)
                 {
-                    estado_atual = TELA_MENU; // Volta para o menu
+                    estado_atual = TELA_MENU;
                     printf("Botão Fechar Clicado: Tutorial -> Menu\n");
                 }
             }
-
-            // Interações de botões nas telas do NPC (ex.: mercado) podem usar aqui as coordenadas
-            // (modular: quando quiser adicionar botões, insira checagens aqui e chame comer/trabalhar/apostar)
         }
         else if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
             if (ev.keyboard.keycode < ALLEGRO_KEY_MAX) {
                 key_down[ev.keyboard.keycode] = true;
             }
 
-            // Reiniciar após Game Over (TELA_SAIR usada como Game Over)
+            // Reiniciar após Game Over
             if (estado_atual == TELA_SAIR) {
                 if (ev.keyboard.keycode == ALLEGRO_KEY_R) {
-                    // Reinicia parâmetros básicos
                     dia_atual = 1;
-                    fome = 100;
-                    energia = 100;
+                    fome = 100.0f; // float
+                    energia = 100.0f; // float
                     dinheiro = 500;
                     dias_sem_comer = 0;
                     ganho_dia = 0;
@@ -448,49 +415,44 @@ int main() {
                 if (ev.keyboard.keycode == ALLEGRO_KEY_E) {
                     if (can_interact) {
                         if (estado_atual == TELA_JOGO && current_npc_id != -1) {
-                            // Abre tela do NPC com base no ID
+                            // Abre tela do NPC
                             switch (current_npc_id) {
                             case 1: estado_atual = TELA_MERCADO; break;
                             case 2: estado_atual = TELA_CASSINO; break;
                             case 3: estado_atual = TELA_BANCO; break;
-                            case 4: estado_atual = TELA_QUARTO; break;
+                            case 4: estado_atual = TELA_QUARTO; break; // NPC 4 voltando para o Quarto
                             default: estado_atual = TELA_JOGO; break;
                             }
                             printf("Iniciando dialogo com NPC ID: %d. Tela: %d\n", current_npc_id, estado_atual);
                         }
                         else if (estado_atual == TELA_QUARTO) {
-                            if (quarto_interact_id == 1) {
-                                // Dormir: avança o dia e mostra tela de fim do dia
-                                // Lógica de fim do dia:
+                            if (quarto_interact_id == 1) { // CAMA
+                                // Lógica de fim do dia
                                 dia_atual += 1;
-                                energia = 100;
-                                fome -= 20;
-                                if (fome < 0) fome = 0;
+                                energia = 100.0f; // float
+                                fome -= 20.0f; // float
+                                if (fome < 0.0f) fome = 0.0f; // float
 
-                                if (fome <= 20) dias_sem_comer++;
+                                if (fome <= 20.0f) dias_sem_comer++; // float
                                 else dias_sem_comer = 0;
 
-                                // Exibe resumo no console
                                 printf("=== FIM DO DIA ===\nDia %d\nGanho no dia: %d\nGasto no dia: %d\nSaldo: %d\n",
                                     dia_atual - 1, ganho_dia, gasto_dia, dinheiro);
 
-                                // Reset contabilizadores diários
                                 ganho_dia = 0;
                                 gasto_dia = 0;
 
-                                // Vai para a tela de fim do dia (onde mostramos resumo)
                                 estado_atual = TELA_FIM_DIA;
-                                printf("Interação (E): Quarto -> Fim do Dia (Cama). Dia agora: %d. Fome=%d, Energia=%d, DiasSemComer=%d\n",
+                                printf("Interação (E): Quarto -> Fim do Dia (Cama). Dia agora: %d. Fome=%.1f, Energia=%.1f, DiasSemComer=%d\n",
                                     dia_atual, fome, energia, dias_sem_comer);
 
                                 // Checa Game Over imediato
-                                if (fome <= 0 || dias_sem_comer >= 3) {
+                                if (fome <= 0.0f || dias_sem_comer >= 3) { // float
                                     estado_atual = TELA_SAIR;
-                                    printf("GAME OVER: Morreu de fome (fome=%d, dias_sem_comer=%d)\n", fome, dias_sem_comer);
+                                    printf("GAME OVER: Morreu de fome (fome=%.1f, dias_sem_comer=%d)\n", fome, dias_sem_comer);
                                 }
                             }
-                            else if (quarto_interact_id == 2) {
-                                // Porta -> sair para mapa
+                            else if (quarto_interact_id == 2) { // PORTA
                                 estado_atual = TELA_JOGO;
                                 printf("Interação (E): Quarto -> Jogo (Porta)\n");
                             }
@@ -508,15 +470,15 @@ int main() {
                 case TELA_TUTORIAL:
                 case TELA_FIM_DIA:
                     estado_atual = TELA_MENU;
-                    printf("Transição: Jogo/Tutorial/FimDia -> Menu\n");
+                    printf("Transição: Jogo/Tutorial/FimDia -> Menu (ESC)\n");
                     break;
 
                 case TELA_MERCADO:
                 case TELA_CASSINO:
                 case TELA_BANCO:
-                    estado_atual = TELA_JOGO; // Volta para o mapa
+                    estado_atual = TELA_JOGO;
                     current_npc_id = -1;
-                    printf("Saindo do dialogo. Voltando para o Jogo.\n");
+                    printf("Saindo do dialogo. Voltando para o Jogo (ESC).\n");
                     break;
 
                 case TELA_MENU:
@@ -536,7 +498,7 @@ int main() {
         else if (ev.type == ALLEGRO_EVENT_TIMER) {
 
             // Checagem de Game Over antes das atualizações (por segurança)
-            if (fome <= 0 || dias_sem_comer >= 3) {
+            if (fome <= 0.0f || dias_sem_comer >= 3) { // float
                 estado_atual = TELA_SAIR;
             }
 
@@ -544,45 +506,44 @@ int main() {
             if (estado_atual == TELA_JOGO || estado_atual == TELA_QUARTO) {
                 bool andando_local = false;
 
-                // === LÓGICA DE MOVIMENTAÇÃO E ANIMAÇÃO (DO SEU NOVO CÓDIGO) ===
+                // === LÓGICA DE MOVIMENTAÇÃO E ANIMAÇÃO (Gasto de Energia) ===
                 if (key_down[ALLEGRO_KEY_UP] || key_down[ALLEGRO_KEY_W]) {
                     player_pos_y -= player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA * 2; // Olhando para cima
+                    anim_current_frame_y = FRAME_ALTURA * 2;
                     andando_local = true;
                 }
                 if (key_down[ALLEGRO_KEY_DOWN] || key_down[ALLEGRO_KEY_S]) {
                     player_pos_y += player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA * 0; // Olhando para baixo
+                    anim_current_frame_y = FRAME_ALTURA * 0;
                     andando_local = true;
                 }
                 if (key_down[ALLEGRO_KEY_LEFT] || key_down[ALLEGRO_KEY_A]) {
                     player_pos_x -= player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA * 3; // Olhando para a esquerda
+                    anim_current_frame_y = FRAME_ALTURA * 3;
                     andando_local = true;
                 }
                 if (key_down[ALLEGRO_KEY_RIGHT] || key_down[ALLEGRO_KEY_D]) {
                     player_pos_x += player_velocidade;
-                    anim_current_frame_y = FRAME_ALTURA; // Olhando para a direita
+                    anim_current_frame_y = FRAME_ALTURA;
                     andando_local = true;
                 }
 
                 if (andando_local) {
                     anim_frame += 0.3f;
-                    if (anim_frame >= 3) anim_frame = 0; // 4 frames (0,1,2,3)
+                    if (anim_frame >= 3) anim_frame = 0;
 
-                    // Consome energia e aumenta fome levemente enquanto anda
+                    // CORRIGIDO: Consumo gradual (0.05 e 0.02 são subtraídos como float)
                     energia -= 0.05f;
-                    if (energia < 0) energia = 0;
+                    if (energia < 0.0f) energia = 0.0f;
 
-                    fome -= 0.02f; // interpretamos "andar" como gastar reservas -> diminuir fome
-                    // Aqui mantemos a convenção: fome=100 é cheio; ao diminuir, aproxima de 0 (morte)
-                    if (fome < 0) fome = 0;
+                    fome -= 0.02f;
+                    if (fome < 0.0f) fome = 0.0f;
                 }
                 else {
-                    anim_frame = 0; // Parado no frame inicial da linha
+                    anim_frame = 0;
                 }
 
-                // Penalidade: jogador anda mais devagar se estiver cansado
+                // Penalidade
                 if (energia < 10.0f)
                     player_velocidade = 3.0f;
                 else
@@ -595,7 +556,7 @@ int main() {
                 if (player_pos_y > ALTURA_TELA - FRAME_ALTURA) player_pos_y = ALTURA_TELA - FRAME_ALTURA;
             }
 
-            // Reset das flags de interação (será setado se houver colisão)
+            // Reset das flags de interação
             can_interact = false;
             current_npc_id = -1;
             quarto_interact_id = -1;
@@ -626,15 +587,13 @@ int main() {
             // --- Lógica de Interação/Colisão de NPCs (APENAS em TELA_JOGO) ---
             if (estado_atual == TELA_JOGO) {
                 for (int i = 0; i < MAX_NPCS; i++) {
-                    if (NPC_LIST[i].id != -1) { // Checa se o slot está em uso
-
+                    if (NPC_LIST[i].id != -1) {
                         int player_center_x = player_pos_x + FRAME_LARGURA / 2;
                         int player_center_y = player_pos_y + FRAME_ALTURA / 2;
 
                         if (check_collision(player_center_x, player_center_y, PLAYER_RAIO,
                             NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio))
                         {
-                            // Colisão detectada!
                             can_interact = true;
                             current_npc_id = NPC_LIST[i].id;
                             break;
@@ -645,16 +604,24 @@ int main() {
 
             // --- Fim da Lógica de Atualização ---
 
-            // --- Desenho ---
-            al_clear_to_color(al_map_rgb(0, 0, 0)); // Limpa a tela
 
+            al_clear_to_color(al_map_rgb(0, 0, 0));
+
+            // --- Lógica de Desenho por Estado ---
             switch (estado_atual) {
             case TELA_MENU:
                 al_draw_bitmap(img_menu_fundo, 0, 0, 0);
+                al_draw_filled_rectangle(INICIAR_BTN.x1, INICIAR_BTN.y1, INICIAR_BTN.x2, INICIAR_BTN.y2, al_map_rgb(50, 200, 50));
+                al_draw_filled_rectangle(TUTORIAL_BTN.x1, TUTORIAL_BTN.y1, TUTORIAL_BTN.x2, TUTORIAL_BTN.y2, al_map_rgb(50, 200, 50));
                 break;
 
             case TELA_QUARTO:
+            {
                 al_draw_bitmap(img_quarto_fundo, 0, 0, 0);
+                // Desenho de Debug (Áreas de interação)
+                // al_draw_filled_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(150, 150, 150));
+                // al_draw_filled_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(10, 10, 10));
+
                 if (img_player_sprite) {
                     al_draw_bitmap_region(
                         img_player_sprite,
@@ -667,20 +634,19 @@ int main() {
                         0
                     );
                 }
-                // desenha HUD
                 desenhar_hud_texto();
                 break;
+            }
 
             case TELA_JOGO:
                 al_draw_bitmap(img_mapa_fundo, 0, 0, 0);
                 for (int i = 0; i < MAX_NPCS; i++) {
                     if (NPC_LIST[i].id != -1) {
-                        // (Opcional) desenhe NPCs aqui
-                        // ALLEGRO_COLOR cor_npc = al_map_rgb(150, 150, 150);
-                        // if (can_interact && current_npc_id == NPC_LIST[i].id) {
-                        //     cor_npc = al_map_rgb(255, 0, 0);
-                        // }
-                        // al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
+                        ALLEGRO_COLOR cor_npc = al_map_rgb(150, 150, 150);
+                        if (can_interact && current_npc_id == NPC_LIST[i].id) {
+                            cor_npc = al_map_rgb(255, 0, 0);
+                        }
+                        al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
                     }
                 }
                 if (img_player_sprite) {
@@ -695,15 +661,11 @@ int main() {
                         0
                     );
                 }
-                // desenha HUD
                 desenhar_hud_texto();
                 break;
 
             case TELA_MERCADO:
                 al_draw_bitmap(img_mercado_fundo, 0, 0, 0);
-                // EXEMPLO: Se quiser botões aqui, adicione detecção de mouse e chame comer(...)
-                // Por exemplo: se clicar em uma área -> comer(30, 30);
-                // desenhar HUD também
                 desenhar_hud_texto();
                 break;
 
@@ -719,12 +681,17 @@ int main() {
 
             case TELA_TUTORIAL:
                 al_draw_bitmap(img_tutorial_fundo, 0, 0, 0);
-                // botão fechar desenhado pelo fundo ou debug
                 break;
 
             case TELA_FIM_DIA:
-                // Mostra resumo do dia e os valores
-                al_draw_bitmap(img_fim_dia_fundo, 0, 0, 0);
+                // CORRIGIDO: Apenas desenha o fundo, sem limpar com cor sólida.
+                if (img_fim_dia_fundo) {
+                    al_draw_bitmap(img_fim_dia_fundo, 0, 0, 0);
+                }
+                else {
+                    al_draw_filled_rectangle(0, 0, LARGURA_TELA, ALTURA_TELA, al_map_rgb(20, 20, 20));
+                }
+
                 if (fonte_hud) {
                     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 520, 180, ALLEGRO_ALIGN_CENTER, "Fim do Dia %d", dia_atual - 1);
                     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 520, 220, ALLEGRO_ALIGN_CENTER, "Ganho no dia: R$ %d", ganho_dia);
@@ -735,12 +702,11 @@ int main() {
                 break;
 
             case TELA_SAIR:
-                // Usamos TELA_SAIR para Game Over também.
                 al_clear_to_color(al_map_rgb(10, 10, 10));
                 if (fonte_hud) {
-                    if (fome <= 0 || dias_sem_comer >= 3) {
+                    if (fome <= 0.0f || dias_sem_comer >= 3) {
                         al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 400, 260, 0, "GAME OVER - Você morreu de fome.");
-                        al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 400, 300, 0, "Fome: %d%% | Dias sem comer: %d", fome, dias_sem_comer);
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 400, 300, 0, "Fome: %d%% | Dias sem comer: %d", (int)fome, dias_sem_comer);
                         al_draw_textf(fonte_hud, al_map_rgb(200, 200, 200), 400, 340, 0, "Pressione R para reiniciar ou ESC para sair.");
                     }
                     else {
