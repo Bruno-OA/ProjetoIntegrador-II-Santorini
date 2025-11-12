@@ -151,7 +151,7 @@ NPC NPC_LIST[MAX_NPCS] = {
 // Mapeamento de Botões 
 CoordenadasBotao INICIAR_BTN = { .x1 = 480, .y1 = 420, .x2 = 848, .y2 = 510 };
 CoordenadasBotao TUTORIAL_BTN = { .x1 = 480, .y1 = 545, .x2 = 848, .y2 = 630 };
-CoordenadasBotao FECHAR_BTN = { .x1 = 1100, .y1 = 50, .x2 = 1250, .y2 = 100 };
+CoordenadasBotao FECHAR_BTN = { .x1 = 1020, .y1 = 690, .x2 = 1240, .y2 = 635 };
 CoordenadasBotao CAMA_AREA = { .x1 = 350, .y1 = 430, .x2 = 570, .y2 = 560 };
 CoordenadasBotao PORTA_AREA = { .x1 = 920, .y1 = 300, .x2 = 1000, .y2 = 550 };
 CoordenadasBotao INVEST_BTN_1 = { .x1 = 900, .y1 = 200, .x2 = 1200, .y2 = 250 };
@@ -208,11 +208,16 @@ bool check_player_wall_collision(float px, float py, float pr, const Parede* wal
 
 void desenhar_hud_texto() {
     if (!fonte_hud) return;
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 21, 0, "Dia: %d", dia_atual);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 51, 0, "Dinheiro: R$ %d", dinheiro);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 81, 0, "Fome: %d%%", (int)fome);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 111, 0, "Energia: %d%%", (int)energia);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 141, 0, "Dias sem comer: %d", dias_sem_comer);
     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 20, 0, "Dia: %d", dia_atual);
     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 50, 0, "Dinheiro: R$ %d", dinheiro);
     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 80, 0, "Fome: %d%%", (int)fome);
     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 110, 0, "Energia: %d%%", (int)energia);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 200, 200), 20, 140, 0, "Dias sem comer: %d", dias_sem_comer);
+    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 140, 0, "Dias sem comer: %d", dias_sem_comer);
 }
 
 // LÓGICA DE SIMULAÇÃO BÁSICA
@@ -676,8 +681,8 @@ int main() {
             switch (estado_atual) {
             case TELA_MENU:
                 al_draw_bitmap(img_menu_fundo, 0, 0, 0);
-                al_draw_filled_rectangle(INICIAR_BTN.x1, INICIAR_BTN.y1, INICIAR_BTN.x2, INICIAR_BTN.y2, al_map_rgb(50, 200, 50));
-                al_draw_filled_rectangle(TUTORIAL_BTN.x1, TUTORIAL_BTN.y1, TUTORIAL_BTN.x2, TUTORIAL_BTN.y2, al_map_rgb(50, 200, 50));
+                //al_draw_filled_rectangle(INICIAR_BTN.x1, INICIAR_BTN.y1, INICIAR_BTN.x2, INICIAR_BTN.y2, al_map_rgb(50, 200, 50));
+                //al_draw_filled_rectangle(TUTORIAL_BTN.x1, TUTORIAL_BTN.y1, TUTORIAL_BTN.x2, TUTORIAL_BTN.y2, al_map_rgb(50, 200, 50));
                 break;
             case TELA_QUARTO:
             case TELA_JOGO:
@@ -688,13 +693,14 @@ int main() {
                 const Parede* current_walls = (estado_atual == TELA_QUARTO) ? PAREDES_QUARTO : PAREDES_MAPA;
                 int num_walls = (estado_atual == TELA_QUARTO) ? num_paredes_quarto : num_paredes_mapa;
                 for (int i = 0; i < num_walls; i++) {
-                    al_draw_rectangle(current_walls[i].x1, current_walls[i].y1, current_walls[i].x2, current_walls[i].y2, al_map_rgb(255, 255, 0), 2);
+                   // al_draw_rectangle(current_walls[i].x1, current_walls[i].y1, current_walls[i].x2, current_walls[i].y2, al_map_rgb(255, 255, 0), 2);
                 }
 
                 // Desenho das áreas de interação do Quarto em cor diferente para identificação (apenas no Quarto)
                 if (estado_atual == TELA_QUARTO) {
-                    al_draw_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(0, 255, 255), 1);
-                    al_draw_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(0, 255, 255), 1);
+                    
+                    //al_draw_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(0, 255, 255), 1);
+                    //al_draw_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(0, 255, 255), 1);
                 }
 
 
@@ -702,7 +708,7 @@ int main() {
                     for (int i = 0; i < MAX_NPCS; i++) {
                         if (NPC_LIST[i].id != -1) {
                             ALLEGRO_COLOR cor_npc = (can_interact && current_npc_id == NPC_LIST[i].id) ? al_map_rgb(255, 0, 0) : al_map_rgb(150, 150, 150);
-                            al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
+                            //al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
                         }
                     }
                 }
@@ -775,12 +781,12 @@ int main() {
                 // INC +50
                 al_draw_filled_rectangle(700, 500, 780, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 740, 510, ALLEGRO_ALIGN_CENTER, "+50");
                 // INC +1
-                al_draw_filled_rectangle(650, 500, 690, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 670, 510, ALLEGRO_ALIGN_CENTER, "+1");
+                //al_draw_filled_rectangle(650, 500, 690, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 670, 510, ALLEGRO_ALIGN_CENTER, "+1");
 
                 // DEC -50
                 al_draw_filled_rectangle(500, 500, 540, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 520, 510, ALLEGRO_ALIGN_CENTER, "-50");
                 // DEC -1
-                al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-1");
+                //al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-1");
 
                 // 4. Botão GIRAR / Apostar
                 ALLEGRO_COLOR bet_cor = (dinheiro >= aposta_valor) ? al_map_rgb(0, 150, 255) : al_map_rgb(50, 50, 50);
@@ -873,7 +879,7 @@ int main() {
                 if (fonte_hud) {
                     if (fome <= 0.0f || dias_sem_comer >= 3) {
                         al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 400, 260, 0, "GAME OVER - Você morreu de fome.");
-                        al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 400, 340, 0, "Pressione R para reiniciar ou ESC para sair.");
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 400, 340, 0, "Pressione R para reiniciar");
                     }
                     else { al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 400, 300, 0, "Saindo do jogo..."); }
                 }
@@ -883,7 +889,7 @@ int main() {
 
             if (estado_atual == TELA_TUTORIAL || estado_atual == TELA_FIM_DIA || estado_atual == TELA_BANCO || estado_atual == TELA_MERCADO || estado_atual == TELA_CASSINO) {
                 al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
-                al_draw_text(fonte_hud, al_map_rgb(255, 255, 255), FECHAR_BTN.x1 + 10, FECHAR_BTN.y1 + 15, 0, "SAIR (ESC)");
+                //al_draw_text(fonte_hud, al_map_rgb(255, 255, 255), FECHAR_BTN.x1 + 10, FECHAR_BTN.y1 + 15, 0, "SAIR (ESC)");
             }
 
             al_flip_display();
