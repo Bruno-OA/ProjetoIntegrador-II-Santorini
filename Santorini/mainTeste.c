@@ -888,7 +888,7 @@ int main() {
             }
 
             if (estado_atual == TELA_TUTORIAL || estado_atual == TELA_FIM_DIA || estado_atual == TELA_BANCO || estado_atual == TELA_MERCADO || estado_atual == TELA_CASSINO) {
-                al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
+                //al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 //al_draw_text(fonte_hud, al_map_rgb(255, 255, 255), FECHAR_BTN.x1 + 10, FECHAR_BTN.y1 + 15, 0, "SAIR (ESC)");
             }
 
