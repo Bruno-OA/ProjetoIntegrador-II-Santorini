@@ -151,7 +151,7 @@ NPC NPC_LIST[MAX_NPCS] = {
 // Mapeamento de Botões 
 CoordenadasBotao INICIAR_BTN = { .x1 = 480, .y1 = 420, .x2 = 848, .y2 = 510 };
 CoordenadasBotao TUTORIAL_BTN = { .x1 = 480, .y1 = 545, .x2 = 848, .y2 = 630 };
-CoordenadasBotao FECHAR_BTN = { .x1 = 1020, .y1 = 690, .x2 = 1240, .y2 = 635 };
+CoordenadasBotao FECHAR_BTN = { .x1 = 1020, .y1 = 635, .x2 = 1240, .y2 = 690 };
 CoordenadasBotao CAMA_AREA = { .x1 = 350, .y1 = 430, .x2 = 570, .y2 = 560 };
 CoordenadasBotao PORTA_AREA = { .x1 = 920, .y1 = 300, .x2 = 1000, .y2 = 550 };
 CoordenadasBotao INVEST_BTN_1 = { .x1 = 900, .y1 = 200, .x2 = 1200, .y2 = 250 };
@@ -438,7 +438,7 @@ int main() {
             else if (estado_atual == TELA_FIM_DIA) {
                 if (ev.mouse.x >= FECHAR_BTN.x1 && ev.mouse.x <= FECHAR_BTN.x2 && ev.mouse.y >= FECHAR_BTN.y1 && ev.mouse.y <= FECHAR_BTN.y2)
                 {
-                    estado_atual = TELA_MENU; printf("Botão Fechar Clicado: Fim do Dia -> Menu\n");
+                    estado_atual = TELA_QUARTO; printf("Botão Fechar Clicado: Fim do Dia -> Menu\n");
                 }
             }
             else if (estado_atual == TELA_TUTORIAL) {
@@ -585,8 +585,10 @@ int main() {
                 case TELA_JOGO:
                     // TELA_JOGO (Mapa) não faz mais nada com ESC. Retorna a TELA_JOGO.
                     break;
-                case TELA_QUARTO: case TELA_TUTORIAL: case TELA_FIM_DIA:
+                case TELA_QUARTO: case TELA_TUTORIAL: 
                     estado_atual = TELA_MENU; break;
+                case TELA_FIM_DIA:
+                    estado_atual = TELA_QUARTO; break;
                 case TELA_MERCADO: case TELA_CASSINO: case TELA_BANCO:
                     // Volta de Lojas -> Posição Central do Mapa
                     estado_atual = TELA_JOGO;
@@ -867,11 +869,12 @@ int main() {
             case TELA_TUTORIAL: al_draw_bitmap(img_tutorial_fundo, 0, 0, 0); break;
             case TELA_FIM_DIA:
                 if (img_fim_dia_fundo) { al_draw_bitmap(img_fim_dia_fundo, 0, 0, 0); }
-                else { al_draw_filled_rectangle(0, 0, LARGURA_TELA, ALTURA_TELA, al_map_rgb(20, 20, 20)); }
+                else { al_draw_filled_rectangle(0, 0, LARGURA_TELA, ALTURA_TELA, al_map_rgb(20, 20, 20)); 
                 if (fonte_hud) {
                     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 520, 180, ALLEGRO_ALIGN_CENTER, "Fim do Dia %d", dia_atual - 1);
                     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 520, 300, ALLEGRO_ALIGN_CENTER, "Saldo atual: R$ %d", dinheiro);
                     al_draw_textf(fonte_hud, al_map_rgb(200, 200, 200), 520, 360, ALLEGRO_ALIGN_CENTER, "Clique no botão FECHAR para voltar ao menu.");
+                    
                 }
                 break;
             case TELA_SAIR:
