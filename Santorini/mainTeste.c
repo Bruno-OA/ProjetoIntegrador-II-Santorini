@@ -314,13 +314,13 @@ void inicializar_paredes() {
     num_paredes_quarto = 0;
 
     // 1. Bordas da Sala
-    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 0, 0, LARGURA_TELA, 190};
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 0, 0, LARGURA_TELA, 190 };
     PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 0, ALTURA_TELA - 20, LARGURA_TELA, ALTURA_TELA };
     PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 0, 0, 250, ALTURA_TELA };
     PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 970, 0, LARGURA_TELA, ALTURA_TELA };
 
     // 2. Obstáculos Internos 
-    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 300, 70, 470, 250 }; 
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 300, 70, 470, 250 };
     PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 100, 480, 570, 450 };
 
     // --- PAREDES DO MAPA ---
@@ -389,8 +389,21 @@ int main() {
     // Inicializa as coordenadas das paredes
     inicializar_paredes();
 
-    player_pos_x = (LARGURA_TELA - FRAME_LARGURA) / 2.0;
-    player_pos_y = (ALTURA_TELA - FRAME_ALTURA) / 2.0;
+    // --- POSIÇÕES CHAVE PARA O JOGADOR (NOVAS/AJUSTADAS) ---
+    float player_center_offset = FRAME_LARGURA / 2.0;
+    float POS_CENTRO_X = (LARGURA_TELA - FRAME_LARGURA) / 2.0;
+    float POS_CENTRO_Y = (ALTURA_TELA - FRAME_ALTURA) / 2.0;
+
+    // Posição de Saída do Quarto (Canto Esquerdo do Mapa)
+    float POS_MAPA_ENTRADA_X = 50 - player_center_offset;
+    float POS_MAPA_ENTRADA_Y = POS_CENTRO_Y;
+
+    // Posição de Entrada do Quarto (Centralizada no Quarto)
+    float POS_QUARTO_ENTRADA_X = POS_CENTRO_X;
+    float POS_QUARTO_ENTRADA_Y = POS_CENTRO_Y;
+
+    player_pos_x = POS_CENTRO_X;
+    player_pos_y = POS_CENTRO_Y;
 
     al_register_event_source(fila, al_get_display_event_source(janela));
     al_register_event_source(fila, al_get_keyboard_event_source());
@@ -410,7 +423,7 @@ int main() {
             if (estado_atual == TELA_MENU) {
                 if (ev.mouse.x >= INICIAR_BTN.x1 && ev.mouse.x <= INICIAR_BTN.x2 && ev.mouse.y >= INICIAR_BTN.y1 && ev.mouse.y <= INICIAR_BTN.y2)
                 {
-                    estado_atual = TELA_QUARTO; player_pos_x = (LARGURA_TELA - FRAME_LARGURA) / 2.0; player_pos_y = (ALTURA_TELA - FRAME_ALTURA) / 2.0; printf("Transição: Menu -> Quarto\n");
+                    estado_atual = TELA_QUARTO; player_pos_x = POS_CENTRO_X; player_pos_y = POS_CENTRO_Y; printf("Transição: Menu -> Quarto\n");
                 }
                 if (ev.mouse.x >= TUTORIAL_BTN.x1 && ev.mouse.x <= TUTORIAL_BTN.x2 && ev.mouse.y >= TUTORIAL_BTN.y1 && ev.mouse.y <= TUTORIAL_BTN.y2)
                 {
@@ -495,14 +508,13 @@ int main() {
                 if (ev.mouse.x >= BET_BTN.x1 && ev.mouse.x <= BET_BTN.x2 && ev.mouse.y >= BET_BTN.y1 && ev.mouse.y <= BET_BTN.y2) {
                     apostar_cassino(aposta_valor, &dinheiro, &ganho_dia, &gasto_dia, &aposta_resultado_exibir, &aposta_ganhou);
                 }
-                // 2. Botões de AJUSTE DE VALOR (Incremento)
-                else if (ev.mouse.x >= 700 && ev.mouse.x <= 780 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 100; }
-                else if (ev.mouse.x >= 650 && ev.mouse.x <= 690 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 10; }
-                else if (ev.mouse.x >= 600 && ev.mouse.x <= 640 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 1; }
+                // 2. Botões de AJUSTE de 50 e 1 (Simplificado)
+                // Checa áreas de +50 (direta) e -50 (esquerda)
+                if ((ev.mouse.x >= 700 && ev.mouse.x <= 780 && ev.mouse.y >= 500 && ev.mouse.y <= 540) || (ev.mouse.x >= 650 && ev.mouse.x <= 690 && ev.mouse.y >= 500 && ev.mouse.y <= 540)) { ajuste = 50; }
+                else if ((ev.mouse.x >= 500 && ev.mouse.x <= 540 && ev.mouse.y >= 500 && ev.mouse.y <= 540) || (ev.mouse.x >= 550 && ev.mouse.x <= 590 && ev.mouse.y >= 500 && ev.mouse.y <= 540)) { ajuste = -50; }
 
-                // 3. Botões de AJUSTE DE VALOR (Decremento)
-                else if (ev.mouse.x >= 500 && ev.mouse.x <= 540 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = -100; }
-                else if (ev.mouse.x >= 550 && ev.mouse.x <= 590 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = -10; }
+                // Checa áreas de +1 e -1
+                else if (ev.mouse.x >= 600 && ev.mouse.x <= 640 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 1; }
                 else if (ev.mouse.x >= 500 && ev.mouse.x <= 540 && ev.mouse.y >= 550 && ev.mouse.y <= 590) { ajuste = -1; }
 
                 // Aplica o ajuste (se houver) e checa limites
@@ -534,7 +546,10 @@ int main() {
                             case 1: estado_atual = TELA_MERCADO; break;
                             case 2: estado_atual = TELA_CASSINO; break;
                             case 3: estado_atual = TELA_BANCO; break;
-                            case 4: estado_atual = TELA_QUARTO; break;
+                            case 4: estado_atual = TELA_QUARTO; 
+                                player_pos_x = 860;
+                                player_pos_y = 360; 
+                                break;
                             default: estado_atual = TELA_JOGO; break;
                             }
                             printf("Iniciando dialogo com NPC ID: %d. Tela: %d\n", current_npc_id, estado_atual);
@@ -549,7 +564,10 @@ int main() {
                                 if (fome <= 0.0f || dias_sem_comer >= 3) { estado_atual = TELA_SAIR; }
                             }
                             else if (quarto_interact_id == 2) {
-                                estado_atual = TELA_JOGO; printf("Interação (E): Quarto -> Jogo (Porta)\n");
+                                estado_atual = TELA_JOGO;
+                                player_pos_x = POS_MAPA_ENTRADA_X; // Saída do Quarto -> Canto Esquerdo do Mapa
+                                player_pos_y = POS_MAPA_ENTRADA_Y;
+                                printf("Interação (E): Quarto -> Jogo (Porta)\n");
                             }
                         }
                     }
@@ -559,10 +577,16 @@ int main() {
         else if (ev.type == ALLEGRO_EVENT_KEY_UP) {
             if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
                 switch (estado_atual) {
-                case TELA_JOGO: case TELA_QUARTO: case TELA_TUTORIAL: case TELA_FIM_DIA:
+                case TELA_JOGO:
+                    // TELA_JOGO (Mapa) não faz mais nada com ESC. Retorna a TELA_JOGO.
+                    break;
+                case TELA_QUARTO: case TELA_TUTORIAL: case TELA_FIM_DIA:
                     estado_atual = TELA_MENU; break;
                 case TELA_MERCADO: case TELA_CASSINO: case TELA_BANCO:
-                    estado_atual = TELA_JOGO; current_npc_id = -1; break;
+                    // Volta de Lojas -> Posição Central do Mapa
+                    estado_atual = TELA_JOGO;
+                    current_npc_id = -1;
+                    break;
                 case TELA_MENU:
                     rodando = false; break;
                 default: break;
@@ -747,19 +771,16 @@ int main() {
                 al_draw_filled_rectangle(500, 500, 780, 540, al_map_rgb(20, 20, 20));
                 al_draw_textf(fonte_hud, al_map_rgb(255, 255, 0), 640, 510, ALLEGRO_ALIGN_CENTER, "APOSTA: R$%d", aposta_valor);
 
-                // 3. Botões de Controle de Aposta (Alinhados)
-                // DEC -100
-                al_draw_filled_rectangle(500, 500, 540, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 520, 510, ALLEGRO_ALIGN_CENTER, "-100");
-                // DEC -10
-                al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-10");
+                // 3. Botões de Controle de Aposta
+                // INC +50
+                al_draw_filled_rectangle(700, 500, 780, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 740, 510, ALLEGRO_ALIGN_CENTER, "+50");
                 // INC +1
-                al_draw_filled_rectangle(600, 500, 640, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 620, 510, ALLEGRO_ALIGN_CENTER, "+1");
-                // INC +10
-                al_draw_filled_rectangle(650, 500, 690, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 670, 510, ALLEGRO_ALIGN_CENTER, "+10");
-                // INC +100
-                al_draw_filled_rectangle(700, 500, 780, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 740, 510, ALLEGRO_ALIGN_CENTER, "+100");
+                al_draw_filled_rectangle(650, 500, 690, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 670, 510, ALLEGRO_ALIGN_CENTER, "+1");
+
+                // DEC -50
+                al_draw_filled_rectangle(500, 500, 540, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 520, 510, ALLEGRO_ALIGN_CENTER, "-50");
                 // DEC -1
-                al_draw_filled_rectangle(500, 550, 540, 590, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 520, 565, ALLEGRO_ALIGN_CENTER, "-1");
+                al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-1");
 
                 // 4. Botão GIRAR / Apostar
                 ALLEGRO_COLOR bet_cor = (dinheiro >= aposta_valor) ? al_map_rgb(0, 150, 255) : al_map_rgb(50, 50, 50);
