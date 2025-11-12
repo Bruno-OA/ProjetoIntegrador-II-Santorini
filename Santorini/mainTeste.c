@@ -29,10 +29,12 @@ typedef enum {
 } EstadoDoJogo;
 
 // =================================================================
-// ESTRUTURAS DE COLISÃO / NPC
+// ESTRUTURAS DE COLISÃO / NPC / BOTÃO
 // =================================================================
 
 #define MAX_NPCS 5
+#define MAX_PAREDES 20
+
 typedef struct {
     int id;
     int x;
@@ -43,6 +45,12 @@ typedef struct {
     int x1, y1;
     int x2, y2;
 } CoordenadasBotao;
+
+// ESTRUTURA PARA PAREDES (NOVAS)
+typedef struct {
+    float x1, y1;
+    float x2, y2;
+} Parede;
 
 // =================================================================
 // ESTRUTURAS E DADOS DE INVESTIMENTO
@@ -124,7 +132,7 @@ int anim_current_frame_y = 90 * 2;
 const int FRAME_LARGURA = 95;
 const int FRAME_ALTURA = 180;
 
-// Variáveis do Cassino (NOVAS)
+// Variáveis do Cassino
 int aposta_valor = 50;
 const int MIN_APOSTA = 50;
 const int MAX_APOSTA = 500;
@@ -140,7 +148,7 @@ NPC NPC_LIST[MAX_NPCS] = {
     { -1, 0, 0, 0 }
 };
 
-// Mapeamento de Botões (INCLUI NOVOS DO CASSINO)
+// Mapeamento de Botões 
 CoordenadasBotao INICIAR_BTN = { .x1 = 480, .y1 = 420, .x2 = 848, .y2 = 510 };
 CoordenadasBotao TUTORIAL_BTN = { .x1 = 480, .y1 = 545, .x2 = 848, .y2 = 630 };
 CoordenadasBotao FECHAR_BTN = { .x1 = 1100, .y1 = 50, .x2 = 1250, .y2 = 100 };
@@ -152,6 +160,12 @@ CoordenadasBotao INVEST_BTN_3 = { .x1 = 900, .y1 = 340, .x2 = 1200, .y2 = 390 };
 CoordenadasBotao BET_BTN = { .x1 = 500, .y1 = 600, .x2 = 780, .y2 = 650 };
 CoordenadasBotao UP_BTN = { .x1 = 690, .y1 = 500, .x2 = 780, .y2 = 540 };
 CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 500, .x2 = 590, .y2 = 540 };
+
+// VARIÁVEIS DE PAREDE
+Parede PAREDES_QUARTO[MAX_PAREDES];
+int num_paredes_quarto = 0;
+Parede PAREDES_MAPA[MAX_PAREDES];
+int num_paredes_mapa = 0;
 
 
 // Variáveis de Jogo (Fome/Energia são float)
@@ -178,6 +192,20 @@ bool check_collision(int x1, int y1, int r1, int x2, int y2, int r2) {
     return dist_squared <= radii_sum_squared;
 }
 
+// FUNÇÃO DE COLISÃO CÍRCULO VS RETÂNGULO (PAREDE)
+bool check_player_wall_collision(float px, float py, float pr, const Parede* wall) {
+    float closestX = fmax(wall->x1, fmin(px, wall->x2));
+    float closestY = fmax(wall->y1, fmin(py, wall->y2));
+
+    float distX = px - closestX;
+    float distY = py - closestY;
+
+    if ((distX * distX) + (distY * distY) < (pr * pr)) {
+        return true;
+    }
+    return false;
+}
+
 void desenhar_hud_texto() {
     if (!fonte_hud) return;
     al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 20, 0, "Dia: %d", dia_atual);
@@ -187,15 +215,14 @@ void desenhar_hud_texto() {
     al_draw_textf(fonte_hud, al_map_rgb(255, 200, 200), 20, 140, 0, "Dias sem comer: %d", dias_sem_comer);
 }
 
-// ============== LÓGICA DE SIMULAÇÃO ==============
-
+// LÓGICA DE SIMULAÇÃO BÁSICA
 void comer(int custo, float ganho_fome) {
     if (dinheiro >= custo) {
         dinheiro -= custo;
         gasto_dia += custo;
         fome += ganho_fome;
         if (fome > 100.0f) fome = 100.0f;
-        printf("Comeu: -%d dinheiro, +%.1f fome (fome=%.1f)\n", custo, ganho_fome, fome);
+        printf("Comida comprada: -R$%d. Fome: +%.1f\n", custo, ganho_fome);
     }
     else {
         printf("Dinheiro insuficiente para comer!\n");
@@ -208,37 +235,34 @@ void trabalhar(int ganho, float custo_energia) {
         ganho_dia += ganho;
     }
 }
-// FUNÇÃO APOSTAR CORRIGIDA E ATUALIZADA
-void apostar(int valor, int* dinheiro_ptr, int* ganho_dia_ptr, int* gasto_dia_ptr, bool* resultado_exibir_ptr, bool* ganhou_ptr) {
+
+// FUNÇÃO APOSTAR CASSINO (1% de chance)
+void apostar_cassino(int valor, int* dinheiro_ptr, int* ganho_dia_ptr, int* gasto_dia_ptr, bool* resultado_exibir_ptr, bool* ganhou_ptr) {
     if (*dinheiro_ptr < valor) {
-        printf("Dinheiro insuficiente para apostar R$%d!\n", valor);
         *resultado_exibir_ptr = true;
         *ganhou_ptr = false;
         return;
     }
 
-    // Gerar um número entre 0 e 99 (20% de chance de vitória)
-    int probabilidade = rand() % 100;
+    int probabilidade = rand() % 100; // 0 a 99
 
-    if (probabilidade < 1) {
-        // GANHOU (Paga 2x o valor apostado)
+    if (probabilidade < 1) { // 1% de chance (apenas se probabilidade for 0)
         *dinheiro_ptr += valor;
         *ganho_dia_ptr += valor;
         *ganhou_ptr = true;
-        printf("Ganhou aposta! +R$%d dinheiro (Probabilidade: %d%%)\n", valor, probabilidade);
+        printf("Ganhou aposta! +R$%d\n", valor);
     }
     else {
-        // PERDEU
         *dinheiro_ptr -= valor;
         *gasto_dia_ptr += valor;
         *ganhou_ptr = false;
-        printf("Perdeu aposta! -R$%d dinheiro (Probabilidade: %d%%)\n", valor, probabilidade);
+        printf("Perdeu aposta! -R$%d\n", valor);
     }
 
     *resultado_exibir_ptr = true;
 }
 
-// ============== LÓGICA DO BANCO ==============
+// LÓGICA DO BANCO
 int find_free_slot() {
     for (int i = 0; i < MAX_INVESTMENTS; i++) {
         if (!active_investments[i].active) { return i; }
@@ -261,18 +285,17 @@ void investir(int option_id, int principal, int dia_atual, int* dinheiro_ptr, in
     active_investments[slot].principal = principal;
     active_investments[slot].start_day = dia_atual;
 
-    printf("Investimento iniciado: R$%d a %.0f%% por %d dias. Slot: %d\n",
-        principal, option.taxa_juros * 100, option.dias_duracao, slot);
+    printf("Investimento iniciado: R$%d a %.0f%% por %d dias.\n", principal, option.taxa_juros * 100, option.dias_duracao);
 }
 
 void sacar(int slot_index, int dia_atual, int* dinheiro_ptr, int* ganho_dia_ptr) {
     ActiveInvestment* inv = &active_investments[slot_index];
-    if (inv->option_id == 0 || !inv->active) { printf("Erro: Slot %d sem investimento ativo.\n", slot_index); return; }
+    if (inv->option_id == 0 || !inv->active) { return; }
 
     InvestmentOption option = INVESTMENT_OPTIONS[inv->option_id - 1];
     int maturity_day = inv->start_day + option.dias_duracao;
 
-    if (dia_atual < maturity_day) { printf("Ainda nao e possivel sacar! Maturidade no Dia %d. (Dia atual: %d)\n", maturity_day, dia_atual); return; }
+    if (dia_atual < maturity_day) { printf("Ainda nao e possivel sacar! Maturidade no Dia %d.\n", maturity_day); return; }
 
     int rendimento = (int)(inv->principal * (1.0f + option.taxa_juros));
     int juros = rendimento - inv->principal;
@@ -280,11 +303,31 @@ void sacar(int slot_index, int dia_atual, int* dinheiro_ptr, int* ganho_dia_ptr)
     *dinheiro_ptr += rendimento;
     *ganho_dia_ptr += juros;
 
-    printf("SAQUE BEM SUCEDIDO! R$ %d principal + R$ %d juros. Total: R$%d. Slot: %d\n",
-        inv->principal, juros, rendimento, slot_index);
+    printf("SAQUE BEM SUCEDIDO! R$%d total. Slot: %d\n", rendimento, slot_index);
 
-    // Limpa o slot
     memset(inv, 0, sizeof(ActiveInvestment));
+}
+
+// FUNÇÃO DE INICIALIZAÇÃO DE PAREDES
+void inicializar_paredes() {
+    // --- PAREDES DO QUARTO ---
+    num_paredes_quarto = 0;
+
+    // 1. Bordas da Sala
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 0, 0, LARGURA_TELA, 190};
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 0, ALTURA_TELA - 20, LARGURA_TELA, ALTURA_TELA };
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 0, 0, 250, ALTURA_TELA };
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 970, 0, LARGURA_TELA, ALTURA_TELA };
+
+    // 2. Obstáculos Internos 
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 300, 70, 470, 250 }; 
+    PAREDES_QUARTO[num_paredes_quarto++] = (Parede){ 100, 480, 570, 450 };
+
+    // --- PAREDES DO MAPA ---
+    num_paredes_mapa = 0;
+
+    PAREDES_MAPA[num_paredes_mapa++] = (Parede){ 0, 20, 1280, 35 };
+    PAREDES_MAPA[num_paredes_mapa++] = (Parede){ 0, 500, 1280, 550 };
 }
 
 
@@ -314,6 +357,7 @@ void limpar_recursos() {
     if (img_cassino_fundo) al_destroy_bitmap(img_cassino_fundo);
     if (img_banco_fundo) al_destroy_bitmap(img_banco_fundo);
     if (img_fim_dia_fundo) al_destroy_bitmap(img_fim_dia_fundo);
+    if (fonte_hud) al_destroy_font(fonte_hud);
 }
 
 // =====================================================================
@@ -341,6 +385,9 @@ int main() {
         fprintf(stderr, "Falha crítica ao inicializar imagens.\n");
         limpar_recursos(); al_destroy_display(janela); return -1;
     }
+
+    // Inicializa as coordenadas das paredes
+    inicializar_paredes();
 
     player_pos_x = (LARGURA_TELA - FRAME_LARGURA) / 2.0;
     player_pos_y = (ALTURA_TELA - FRAME_ALTURA) / 2.0;
@@ -383,23 +430,17 @@ int main() {
                 }
             }
 
-            // ===================================
             // LÓGICA DE COMPRA DO MERCADINHO
-            // ===================================
             else if (estado_atual == TELA_MERCADO) {
                 for (int i = 0; i < MAX_FOOD_ITEMS; i++) {
-                    if (ev.mouse.x >= FOOD_BTN[i].x1 && ev.mouse.x <= FOOD_BTN[i].x2 &&
-                        ev.mouse.y >= FOOD_BTN[i].y1 && ev.mouse.y <= FOOD_BTN[i].y2) {
-
+                    if (ev.mouse.x >= FOOD_BTN[i].x1 && ev.mouse.x <= FOOD_BTN[i].x2 && ev.mouse.y >= FOOD_BTN[i].y1 && ev.mouse.y <= FOOD_BTN[i].y2) {
                         comer(FOOD_OPTIONS[i].custo, FOOD_OPTIONS[i].ganho_fome);
                         break;
                     }
                 }
             }
 
-            // ===================================
             // LÓGICA DE BOTÕES DO BANCO
-            // ===================================
             else if (estado_atual == TELA_BANCO) {
                 // 1. Tentar INVESTIR nas Opções 1, 2, 3
                 if (ev.mouse.x >= INVEST_BTN_1.x1 && ev.mouse.x <= INVEST_BTN_1.x2 && ev.mouse.y >= INVEST_BTN_1.y1 && ev.mouse.y <= INVEST_BTN_1.y2) {
@@ -422,15 +463,11 @@ int main() {
                             sacados++;
                         }
                     }
-                    if (sacados > 0) {
-                        printf("Saque global efetuado: %d investimento(s) sacado(s).\n", sacados);
-                    }
-                    else {
-                        printf("Nenhum investimento pronto para saque.\n");
-                    }
+                    if (sacados > 0) { printf("Saque global efetuado: %d investimento(s) sacado(s).\n", sacados); }
+                    else { printf("Nenhum investimento pronto para saque.\n"); }
                 }
 
-                // 3. Botões de SAQUE INDIVIDUAL (Mapeamento dinâmico)
+                // 3. Botões de SAQUE INDIVIDUAL 
                 else {
                     for (int i = 0; i < MAX_INVESTMENTS; i++) {
                         if (active_investments[i].active) {
@@ -439,11 +476,7 @@ int main() {
                             bool ready_to_withdraw = (dia_atual >= maturity_day);
 
                             if (ready_to_withdraw) {
-                                int btn_x1 = 900;
-                                int btn_y1 = 450 + (i * 60);
-                                int btn_x2 = 1200;
-                                int btn_y2 = btn_y1 + 40;
-
+                                int btn_x1 = 900; int btn_y1 = 450 + (i * 60); int btn_x2 = 1200; int btn_y2 = btn_y1 + 40;
                                 if (ev.mouse.x >= btn_x1 && ev.mouse.x <= btn_x2 && ev.mouse.y >= btn_y1 && ev.mouse.y <= btn_y2) {
                                     sacar(i, dia_atual, &dinheiro, &ganho_dia);
                                     break;
@@ -454,31 +487,30 @@ int main() {
                 }
             }
 
-            // ===================================
             // LÓGICA DE BOTÕES DO CASSINO
-            // ===================================
             else if (estado_atual == TELA_CASSINO) {
-                // 1. Botão APOSTAR / GIRAR
-                if (ev.mouse.x >= BET_BTN.x1 && ev.mouse.x <= BET_BTN.x2 &&
-                    ev.mouse.y >= BET_BTN.y1 && ev.mouse.y <= BET_BTN.y2) {
+                int ajuste = 0;
 
-                    apostar(aposta_valor, &dinheiro, &ganho_dia, &gasto_dia, &aposta_resultado_exibir, &aposta_ganhou);
+                // 1. Botão APOSTAR / GIRAR
+                if (ev.mouse.x >= BET_BTN.x1 && ev.mouse.x <= BET_BTN.x2 && ev.mouse.y >= BET_BTN.y1 && ev.mouse.y <= BET_BTN.y2) {
+                    apostar_cassino(aposta_valor, &dinheiro, &ganho_dia, &gasto_dia, &aposta_resultado_exibir, &aposta_ganhou);
                 }
-                // 2. Botão AUMENTAR (+)
-                else if (ev.mouse.x >= UP_BTN.x1 && ev.mouse.x <= UP_BTN.x2 &&
-                    ev.mouse.y >= UP_BTN.y1 && ev.mouse.y <= UP_BTN.y2) {
-                    if (aposta_valor < MAX_APOSTA) {
-                        aposta_valor += MIN_APOSTA;
-                        printf("Aposta aumentada para R$%d\n", aposta_valor);
-                    }
-                }
-                // 3. Botão DIMINUIR (-)
-                else if (ev.mouse.x >= DOWN_BTN.x1 && ev.mouse.x <= DOWN_BTN.x2 &&
-                    ev.mouse.y >= DOWN_BTN.y1 && ev.mouse.y <= DOWN_BTN.y2) {
-                    if (aposta_valor > MIN_APOSTA) {
-                        aposta_valor -= MIN_APOSTA;
-                        printf("Aposta diminuída para R$%d\n", aposta_valor);
-                    }
+                // 2. Botões de AJUSTE DE VALOR (Incremento)
+                else if (ev.mouse.x >= 700 && ev.mouse.x <= 780 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 100; }
+                else if (ev.mouse.x >= 650 && ev.mouse.x <= 690 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 10; }
+                else if (ev.mouse.x >= 600 && ev.mouse.x <= 640 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 1; }
+
+                // 3. Botões de AJUSTE DE VALOR (Decremento)
+                else if (ev.mouse.x >= 500 && ev.mouse.x <= 540 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = -100; }
+                else if (ev.mouse.x >= 550 && ev.mouse.x <= 590 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = -10; }
+                else if (ev.mouse.x >= 500 && ev.mouse.x <= 540 && ev.mouse.y >= 550 && ev.mouse.y <= 590) { ajuste = -1; }
+
+                // Aplica o ajuste (se houver) e checa limites
+                if (ajuste != 0) {
+                    int novo_valor = aposta_valor + ajuste;
+                    if (novo_valor < MIN_APOSTA) { aposta_valor = MIN_APOSTA; }
+                    else if (novo_valor > MAX_APOSTA) { aposta_valor = MAX_APOSTA; }
+                    else { aposta_valor = novo_valor; }
                 }
             }
         }
@@ -500,7 +532,7 @@ int main() {
                         if (estado_atual == TELA_JOGO && current_npc_id != -1) {
                             switch (current_npc_id) {
                             case 1: estado_atual = TELA_MERCADO; break;
-                            case 2: estado_atual = TELA_CASSINO; break; // CASSINO
+                            case 2: estado_atual = TELA_CASSINO; break;
                             case 3: estado_atual = TELA_BANCO; break;
                             case 4: estado_atual = TELA_QUARTO; break;
                             default: estado_atual = TELA_JOGO; break;
@@ -541,19 +573,22 @@ int main() {
 
         else if (ev.type == ALLEGRO_EVENT_TIMER) {
 
-            // Lógica para esconder resultado da aposta
-            if (estado_atual != TELA_CASSINO) {
-                aposta_resultado_exibir = false;
-            }
+            if (estado_atual != TELA_CASSINO) { aposta_resultado_exibir = false; }
 
             if (fome <= 0.0f || dias_sem_comer >= 3) { estado_atual = TELA_SAIR; }
 
+            // --- Lógica de Atualização (Movimento e Colisão) ---
             if (estado_atual == TELA_JOGO || estado_atual == TELA_QUARTO) {
                 bool andando_local = false;
-                if (key_down[ALLEGRO_KEY_UP] || key_down[ALLEGRO_KEY_W]) { player_pos_y -= player_velocidade; anim_current_frame_y = FRAME_ALTURA * 2; andando_local = true; }
-                if (key_down[ALLEGRO_KEY_DOWN] || key_down[ALLEGRO_KEY_S]) { player_pos_y += player_velocidade; anim_current_frame_y = FRAME_ALTURA * 0; andando_local = true; }
-                if (key_down[ALLEGRO_KEY_LEFT] || key_down[ALLEGRO_KEY_A]) { player_pos_x -= player_velocidade; anim_current_frame_y = FRAME_ALTURA * 3; andando_local = true; }
-                if (key_down[ALLEGRO_KEY_RIGHT] || key_down[ALLEGRO_KEY_D]) { player_pos_x += player_velocidade; anim_current_frame_y = FRAME_ALTURA; andando_local = true; }
+                float new_x = player_pos_x;
+                float new_y = player_pos_y;
+                float player_center_offset = FRAME_LARGURA / 2.0;
+
+                // 1. Calcular o movimento potencial
+                if (key_down[ALLEGRO_KEY_UP] || key_down[ALLEGRO_KEY_W]) { new_y -= player_velocidade; anim_current_frame_y = FRAME_ALTURA * 2; andando_local = true; }
+                if (key_down[ALLEGRO_KEY_DOWN] || key_down[ALLEGRO_KEY_S]) { new_y += player_velocidade; anim_current_frame_y = FRAME_ALTURA * 0; andando_local = true; }
+                if (key_down[ALLEGRO_KEY_LEFT] || key_down[ALLEGRO_KEY_A]) { new_x -= player_velocidade; anim_current_frame_y = FRAME_ALTURA * 3; andando_local = true; }
+                if (key_down[ALLEGRO_KEY_RIGHT] || key_down[ALLEGRO_KEY_D]) { new_x += player_velocidade; anim_current_frame_y = FRAME_ALTURA; andando_local = true; }
 
                 if (andando_local) {
                     anim_frame += 0.3f; if (anim_frame >= 3) anim_frame = 0;
@@ -564,6 +599,29 @@ int main() {
 
                 if (energia < 10.0f) player_velocidade = 3.0f; else player_velocidade = 7.0f;
 
+                // 2. Colisão e Rollback
+                const Parede* current_walls = (estado_atual == TELA_QUARTO) ? PAREDES_QUARTO : PAREDES_MAPA;
+                int num_walls = (estado_atual == TELA_QUARTO) ? num_paredes_quarto : num_paredes_mapa;
+
+                bool collided_x = false;
+                for (int i = 0; i < num_walls; i++) {
+                    if (check_player_wall_collision(new_x + player_center_offset, player_pos_y + player_center_offset, PLAYER_RAIO, &current_walls[i])) {
+                        collided_x = true;
+                        break;
+                    }
+                }
+                if (!collided_x) { player_pos_x = new_x; }
+
+                bool collided_y = false;
+                for (int i = 0; i < num_walls; i++) {
+                    if (check_player_wall_collision(player_pos_x + player_center_offset, new_y + player_center_offset, PLAYER_RAIO, &current_walls[i])) {
+                        collided_y = true;
+                        break;
+                    }
+                }
+                if (!collided_y) { player_pos_y = new_y; }
+
+                // 3. Limites de Janela (Backup)
                 if (player_pos_x < 0) player_pos_x = 0; if (player_pos_x > LARGURA_TELA - FRAME_LARGURA) player_pos_x = LARGURA_TELA - FRAME_LARGURA;
                 if (player_pos_y < 0) player_pos_y = 0; if (player_pos_y > ALTURA_TELA - FRAME_ALTURA) player_pos_y = ALTURA_TELA - FRAME_ALTURA;
             }
@@ -601,6 +659,21 @@ int main() {
             case TELA_JOGO:
                 if (estado_atual == TELA_QUARTO) al_draw_bitmap(img_quarto_fundo, 0, 0, 0);
                 if (estado_atual == TELA_JOGO) al_draw_bitmap(img_mapa_fundo, 0, 0, 0);
+
+                // DESENHO DAS PAREDES (VISIBILIDADE ATIVADA)
+                const Parede* current_walls = (estado_atual == TELA_QUARTO) ? PAREDES_QUARTO : PAREDES_MAPA;
+                int num_walls = (estado_atual == TELA_QUARTO) ? num_paredes_quarto : num_paredes_mapa;
+                for (int i = 0; i < num_walls; i++) {
+                    al_draw_rectangle(current_walls[i].x1, current_walls[i].y1, current_walls[i].x2, current_walls[i].y2, al_map_rgb(255, 255, 0), 2);
+                }
+
+                // Desenho das áreas de interação do Quarto em cor diferente para identificação (apenas no Quarto)
+                if (estado_atual == TELA_QUARTO) {
+                    al_draw_rectangle(CAMA_AREA.x1, CAMA_AREA.y1, CAMA_AREA.x2, CAMA_AREA.y2, al_map_rgb(0, 255, 255), 1);
+                    al_draw_rectangle(PORTA_AREA.x1, PORTA_AREA.y1, PORTA_AREA.x2, PORTA_AREA.y2, al_map_rgb(0, 255, 255), 1);
+                }
+
+
                 if (estado_atual == TELA_JOGO) {
                     for (int i = 0; i < MAX_NPCS; i++) {
                         if (NPC_LIST[i].id != -1) {
@@ -667,32 +740,37 @@ int main() {
                 ALLEGRO_COLOR COR_TEXTO_PADRAO = al_map_rgb(255, 255, 255);
 
                 // 1. Título e Saldo
-                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 50, ALLEGRO_ALIGN_CENTER, "CASSINO (20%% Chance de Ganho)");
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 50, ALLEGRO_ALIGN_CENTER, "CASSINO (1%% Chance de Ganho)");
                 al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 90, ALLEGRO_ALIGN_CENTER, "Seu Saldo: R$%d", dinheiro);
 
                 // 2. Campo de Aposta (Valor Atual)
                 al_draw_filled_rectangle(500, 500, 780, 540, al_map_rgb(20, 20, 20));
                 al_draw_textf(fonte_hud, al_map_rgb(255, 255, 0), 640, 510, ALLEGRO_ALIGN_CENTER, "APOSTA: R$%d", aposta_valor);
 
-                // 3. Botões de Controle de Aposta
-                al_draw_filled_rectangle(UP_BTN.x1, UP_BTN.y1, UP_BTN.x2, UP_BTN.y2, al_map_rgb(0, 100, 0));
-                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, UP_BTN.x1 + 45, UP_BTN.y1 + 10, ALLEGRO_ALIGN_CENTER, "+%d", MIN_APOSTA);
-
-                al_draw_filled_rectangle(DOWN_BTN.x1, DOWN_BTN.y1, DOWN_BTN.x2, DOWN_BTN.y2, al_map_rgb(100, 0, 0));
-                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, DOWN_BTN.x1 + 45, DOWN_BTN.y1 + 10, ALLEGRO_ALIGN_CENTER, "-%d", MIN_APOSTA);
+                // 3. Botões de Controle de Aposta (Alinhados)
+                // DEC -100
+                al_draw_filled_rectangle(500, 500, 540, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 520, 510, ALLEGRO_ALIGN_CENTER, "-100");
+                // DEC -10
+                al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-10");
+                // INC +1
+                al_draw_filled_rectangle(600, 500, 640, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 620, 510, ALLEGRO_ALIGN_CENTER, "+1");
+                // INC +10
+                al_draw_filled_rectangle(650, 500, 690, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 670, 510, ALLEGRO_ALIGN_CENTER, "+10");
+                // INC +100
+                al_draw_filled_rectangle(700, 500, 780, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 740, 510, ALLEGRO_ALIGN_CENTER, "+100");
+                // DEC -1
+                al_draw_filled_rectangle(500, 550, 540, 590, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 520, 565, ALLEGRO_ALIGN_CENTER, "-1");
 
                 // 4. Botão GIRAR / Apostar
                 ALLEGRO_COLOR bet_cor = (dinheiro >= aposta_valor) ? al_map_rgb(0, 150, 255) : al_map_rgb(50, 50, 50);
                 al_draw_filled_rectangle(BET_BTN.x1, BET_BTN.y1, BET_BTN.x2, BET_BTN.y2, bet_cor);
-                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 615, ALLEGRO_ALIGN_CENTER, "GIRAR!");
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 615, ALLEGRO_ALIGN_CENTER, "GIRAR! (R$%d)", aposta_valor);
 
                 // 5. Exibir Resultado
                 if (aposta_resultado_exibir) {
                     ALLEGRO_COLOR resultado_cor = aposta_ganhou ? al_map_rgb(0, 255, 0) : al_map_rgb(255, 0, 0);
                     const char* resultado_msg = aposta_ganhou ? "VOCÊ GANHOU! (+R$%d)" : "VOCÊ PERDEU! (-R$%d)";
-
-                    al_draw_textf(fonte_hud, resultado_cor, 640, 400, ALLEGRO_ALIGN_CENTER,
-                        resultado_msg, aposta_valor);
+                    al_draw_textf(fonte_hud, resultado_cor, 640, 400, ALLEGRO_ALIGN_CENTER, resultado_msg, aposta_valor);
                 }
 
                 desenhar_hud_texto();
@@ -744,9 +822,7 @@ int main() {
                         al_draw_textf(fonte_hud, status_cor, 450, y_offset + 10, 0, ready_to_withdraw ? "PRONTO!" : "Maturidade: Dia %d", maturity_day);
 
                         int btn_x1 = 900;
-                        int btn_y1 = y_offset;
-                        int btn_x2 = 1200;
-                        int btn_y2 = btn_y1 + 40;
+                        int btn_y1 = y_offset; int btn_x2 = 1200; int btn_y2 = btn_y1 + 40;
 
                         ALLEGRO_COLOR saque_cor = ready_to_withdraw ? al_map_rgb(0, 100, 200) : al_map_rgb(50, 50, 50);
                         al_draw_filled_rectangle(btn_x1, btn_y1, btn_x2, btn_y2, saque_cor);
@@ -754,7 +830,6 @@ int main() {
                     }
                 }
 
-                // 4. Botão Sacar Tudo (Posição fixa)
                 al_draw_filled_rectangle(50, 650, 250, 700, al_map_rgb(150, 0, 150));
                 al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 60, 665, 0, "SACAR TUDO");
 
@@ -785,7 +860,7 @@ int main() {
             default: break;
             }
 
-            if (estado_atual == TELA_TUTORIAL || estado_atual == TELA_FIM_DIA || estado_atual == TELA_BANCO) {
+            if (estado_atual == TELA_TUTORIAL || estado_atual == TELA_FIM_DIA || estado_atual == TELA_BANCO || estado_atual == TELA_MERCADO || estado_atual == TELA_CASSINO) {
                 al_draw_filled_rectangle(FECHAR_BTN.x1, FECHAR_BTN.y1, FECHAR_BTN.x2, FECHAR_BTN.y2, al_map_rgb(200, 50, 50));
                 al_draw_text(fonte_hud, al_map_rgb(255, 255, 255), FECHAR_BTN.x1 + 10, FECHAR_BTN.y1 + 15, 0, "SAIR (ESC)");
             }
