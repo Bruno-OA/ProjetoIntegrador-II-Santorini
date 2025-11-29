@@ -729,13 +729,13 @@ int main() {
                 al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Mercadinho: Saldo R$ %d", dinheiro);
                 al_draw_textf(fonte_hud, COR_TEXTO, 50, 80, 0, "Clique para Comprar:");
 
-                int start_x = 50;
-                int start_y = 120;
-                int btn_largura = 180;
-                int btn_altura = 60;
+                int start_x = 275;
+                int start_y = 150;
+                int btn_largura = 165;
+                int btn_altura = 100;
                 int colunas = 4;
-                int espacamento_x = 20;
-                int espacamento_y = 20;
+                int espacamento_x = 21;
+                int espacamento_y = 122;
 
                 for (int i = 0; i < MAX_FOOD_ITEMS; i++) {
                     int col = i % colunas;
