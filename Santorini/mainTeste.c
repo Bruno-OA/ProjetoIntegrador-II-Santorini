@@ -398,7 +398,7 @@ int carregar_imagens() {
     img_quarto_fundo = al_load_bitmap("quarto_fundo1.png");
     img_mercado_fundo = al_load_bitmap("mercado_fundo.png");
     img_cassino_fundo = al_load_bitmap("cassino_fundo.png");
-    img_banco_fundo = al_load_bitmap("banco_fundo.png");
+    img_banco_fundo = al_load_bitmap("banco_fundo_2.png");
     img_fim_dia_fundo = al_load_bitmap("fim_dia_fundo.png");
 
     if (!img_menu_fundo && !img_mapa_fundo) { return 0; }
