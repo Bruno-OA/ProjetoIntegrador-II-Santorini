@@ -1,4 +1,3 @@
-// jogo_final_integrado.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -149,8 +148,8 @@ bool game_over_por_divida = false; // Para saber qual mensagem exibir no final
 // NPCs
 NPC NPC_LIST[MAX_NPCS] = {
     { 1, 250, 300, 90 },
-    { 2, 650, 300, 90 },
-    { 3, 1030, 300, 90 },
+    { 3, 650, 300, 90 },
+    { 2, 1030, 300, 90 },
     { 4, 2, 550, 40 },
     { -1, 0, 0, 0 }
 };
@@ -782,8 +781,8 @@ int main() {
                     for (int i = 0; i < MAX_NPCS; i++) {
                         if (NPC_LIST[i].id != -1) {
                             ALLEGRO_COLOR cor_npc = (can_interact && current_npc_id == NPC_LIST[i].id) ? al_map_rgb(255, 0, 0) : al_map_rgb(150, 150, 150);
-                            al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
-                            al_draw_rectangle(current_walls[i].x1, current_walls[i].y1, current_walls[i].x2, current_walls[i].y2, al_map_rgb(255, 255, 0), 2);
+                            //al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
+                            //al_draw_rectangle(current_walls[i].x1, current_walls[i].y1, current_walls[i].x2, current_walls[i].y2, al_map_rgb(255, 255, 0), 2);
                         }
                     }
                 }
@@ -884,8 +883,8 @@ int main() {
                 ALLEGRO_COLOR COR_TEXTO = al_map_rgb(0, 0, 0);
                 al_draw_bitmap(img_banco_fundo, 0, 0, 0);
 
-                al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Saldo Disponível: R$ %d | Dia Atual: %d", dinheiro, dia_atual);
-                al_draw_textf(fonte_hud, COR_TEXTO, 900, 170, ALLEGRO_ALIGN_LEFT, "Opções de Investimento");
+                al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Saldo Disponivel: R$ %d | Dia Atual: %d", dinheiro, dia_atual);
+                al_draw_textf(fonte_hud, COR_TEXTO, 900, 170, ALLEGRO_ALIGN_LEFT, "Modos de Investimento");
 
                 for (int i = 0; i < 3; i++) {
                     CoordenadasBotao btn;
@@ -920,8 +919,8 @@ int main() {
                         al_draw_textf(fonte_hud, COR_TEXTO, 50, y_offset + 20, 0,
                             "   Principal: R$%d | Start: Dia %d", inv->principal, inv->start_day);
 
-                        ALLEGRO_COLOR status_cor = ready_to_withdraw ? al_map_rgb(0, 255, 0) : al_map_rgb(255, 255, 0);
-                        al_draw_textf(fonte_hud, status_cor, 450, y_offset + 10, 0, ready_to_withdraw ? "PRONTO!" : "Maturidade: Dia %d", maturity_day);
+                        ALLEGRO_COLOR status_cor = ready_to_withdraw ? al_map_rgb(255, 255, 255) : al_map_rgb(0, 0, 0);
+                        al_draw_textf(fonte_hud, status_cor, 450, y_offset + 10, 0, ready_to_withdraw ? "PRONTO!" : "Resgate: Dia %d", maturity_day);
 
                         int btn_x1 = 900;
                         int btn_y1 = y_offset; int btn_x2 = 1200; int btn_y2 = btn_y1 + 40;
@@ -935,7 +934,7 @@ int main() {
                 al_draw_filled_rectangle(50, 650, 250, 700, al_map_rgb(150, 0, 150));
                 al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 60, 665, 0, "SACAR TUDO");
 
-                desenhar_hud_texto();
+                //desenhar_hud_texto();
                 break;
             }
 
@@ -956,7 +955,7 @@ int main() {
                     if (game_over_por_divida) {
                         // MENSAGEM DE DERROTA POR DÍVIDA
                         al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - O agiota tomou sua casa.");
-                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 290, ALLEGRO_ALIGN_CENTER, "Você ficou 3 dias sem pagar a dívida.");
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 290, ALLEGRO_ALIGN_CENTER, "Você ficou 3 dias sem pagar a divida.");
                     }
                     else if (fome <= 0.0f || dias_sem_comer >= 3) {
                         al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - Você morreu de fome.");
