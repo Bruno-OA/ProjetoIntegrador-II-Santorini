@@ -883,7 +883,7 @@ int main() {
                 ALLEGRO_COLOR COR_TEXTO = al_map_rgb(0, 0, 0);
                 al_draw_bitmap(img_banco_fundo, 0, 0, 0);
 
-                al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Saldo Disponivel: R$ %d | Dia Atual: %d", dinheiro, dia_atual);
+                al_draw_textf(fonte_hud, COR_TEXTO, 50, 170, 0, "Saldo Disponivel: R$ %d | Dia Atual: %d", dinheiro, dia_atual);
                 al_draw_textf(fonte_hud, COR_TEXTO, 900, 170, ALLEGRO_ALIGN_LEFT, "Modos de Investimento");
 
                 for (int i = 0; i < 3; i++) {
