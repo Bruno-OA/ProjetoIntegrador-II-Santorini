@@ -139,6 +139,13 @@ const int MAX_APOSTA = 500;
 bool aposta_resultado_exibir = false;
 bool aposta_ganhou = false;
 
+// Variáveis de Dívida
+int divida_total = 1000;    // Dívida inicial
+int dias_sem_pagar = 0;     // Contador para Game Over
+int valor_parcela = 100;    // Quanto desconta por dia
+int juros_atraso = 50;      // Penalidade se não pagar
+bool game_over_por_divida = false; // Para saber qual mensagem exibir no final
+
 // NPCs
 NPC NPC_LIST[MAX_NPCS] = {
     { 1, 250, 100, 30 },
@@ -208,16 +215,34 @@ bool check_player_wall_collision(float px, float py, float pr, const Parede* wal
 
 void desenhar_hud_texto() {
     if (!fonte_hud) return;
-    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 21, 0, "Dia: %d", dia_atual);
-    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 51, 0, "Dinheiro: R$ %d", dinheiro);
-    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 81, 0, "Fome: %d%%", (int)fome);
-    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 111, 0, "Energia: %d%%", (int)energia);
-    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), 21, 141, 0, "Dias sem comer: %d", dias_sem_comer);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 20, 0, "Dia: %d", dia_atual);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 50, 0, "Dinheiro: R$ %d", dinheiro);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 80, 0, "Fome: %d%%", (int)fome);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 110, 0, "Energia: %d%%", (int)energia);
-    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 20, 140, 0, "Dias sem comer: %d", dias_sem_comer);
+
+    // Configurações de espaçamento
+    int x_pos = 20;
+    int y_inicial = 20;
+    int espacamento = 25; // Reduzi de 30 para 25 para caber melhor
+
+    // --- Sombra (Preto) para leitura melhor ---
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), x_pos + 1, y_inicial + (espacamento * 0) + 1, 0, "Dia: %d", dia_atual);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), x_pos + 1, y_inicial + (espacamento * 1) + 1, 0, "Dinheiro: R$ %d", dinheiro);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), x_pos + 1, y_inicial + (espacamento * 2) + 1, 0, "Fome: %d%%", (int)fome);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), x_pos + 1, y_inicial + (espacamento * 3) + 1, 0, "Energia: %d%%", (int)energia);
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), x_pos + 1, y_inicial + (espacamento * 4) + 1, 0, "Dias sem comer: %d", dias_sem_comer);
+    // Sombra da Dívida
+    al_draw_textf(fonte_hud, al_map_rgb(0, 0, 0), x_pos + 1, y_inicial + (espacamento * 5) + 1, 0, "Divida: R$ %d (Atraso: %d/3)", divida_total, dias_sem_pagar);
+
+    // --- Texto Principal (Branco/Colorido) ---
+    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x_pos, y_inicial + (espacamento * 0), 0, "Dia: %d", dia_atual);
+    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x_pos, y_inicial + (espacamento * 1), 0, "Dinheiro: R$ %d", dinheiro);
+    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x_pos, y_inicial + (espacamento * 2), 0, "Fome: %d%%", (int)fome);
+    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x_pos, y_inicial + (espacamento * 3), 0, "Energia: %d%%", (int)energia);
+
+    // Alerta visual para fome (fica vermelho se tiver fome crítica)
+    ALLEGRO_COLOR cor_fome = (dias_sem_comer > 0) ? al_map_rgb(255, 100, 100) : al_map_rgb(255, 255, 255);
+    al_draw_textf(fonte_hud, cor_fome, x_pos, y_inicial + (espacamento * 4), 0, "Dias sem comer: %d", dias_sem_comer);
+
+    // Dívida em destaque
+    ALLEGRO_COLOR cor_divida = (dias_sem_pagar > 0) ? al_map_rgb(255, 50, 50) : al_map_rgb(255, 150, 150);
+    al_draw_textf(fonte_hud, cor_divida, x_pos, y_inicial + (espacamento * 5), 0, "Divida: R$ %d (Atraso: %d/3)", divida_total, dias_sem_pagar);
 }
 
 // LÓGICA DE SIMULAÇÃO BÁSICA
@@ -311,6 +336,34 @@ void sacar(int slot_index, int dia_atual, int* dinheiro_ptr, int* ganho_dia_ptr)
     printf("SAQUE BEM SUCEDIDO! R$%d total. Slot: %d\n", rendimento, slot_index);
 
     memset(inv, 0, sizeof(ActiveInvestment));
+}
+
+void processar_divida() {
+    // Se a dívida já acabou, não faz nada
+    if (divida_total <= 0) {
+        divida_total = 0;
+        return;
+    }
+
+    printf("--- Processando Dívida ---\n");
+
+    // Verifica se o jogador tem dinheiro para a parcela
+    if (dinheiro >= valor_parcela) {
+        dinheiro -= valor_parcela;
+        divida_total -= valor_parcela;
+        dias_sem_pagar = 0; // Reseta os dias consecutivos se pagar
+
+        if (divida_total < 0) divida_total = 0;
+
+        printf("Pagamento realizado: -R$%d. Dívida restante: R$%d\n", valor_parcela, divida_total);
+    }
+    else {
+        // Jogador não tem dinheiro suficiente
+        divida_total += juros_atraso; // Aplica juros na dívida total
+        dias_sem_pagar++;           // Incrementa contador de derrota
+
+        printf("FALHA NO PAGAMENTO! Juros aplicados (+R$%d). Dias sem pagar: %d/3\n", juros_atraso, dias_sem_pagar);
+    }
 }
 
 // FUNÇÃO DE INICIALIZAÇÃO DE PAREDES
@@ -538,6 +591,12 @@ int main() {
                 if (ev.keyboard.keycode == ALLEGRO_KEY_R) {
                     dia_atual = 1; fome = 100.0f; energia = 100.0f; dinheiro = 500;
                     dias_sem_comer = 0; ganho_dia = 0; gasto_dia = 0;
+
+                    // Resetar variáveis da dívida
+                    divida_total = 1000;
+                    dias_sem_pagar = 0;
+                    game_over_por_divida = false;
+
                     memset(active_investments, 0, sizeof(active_investments));
                     estado_atual = TELA_MENU; printf("Jogo reiniciado (R).\n");
                 }
@@ -561,12 +620,25 @@ int main() {
                         }
                         else if (estado_atual == TELA_QUARTO) {
                             if (quarto_interact_id == 1) {
-                                dia_atual += 1; energia = 100.0f; fome -= 20.0f; if (fome < 0.0f) fome = 0.0f;
+                                dia_atual += 1;
+                                energia = 100.0f;
+                                fome -= 20.0f;
+                                if (fome < 0.0f) fome = 0.0f;
                                 if (fome <= 20.0f) dias_sem_comer++; else dias_sem_comer = 0;
+
+                                //processo da divida
+                                processar_divida();
+
                                 printf("=== FIM DO DIA ===\nDia %d\n", dia_atual - 1);
                                 ganho_dia = 0; gasto_dia = 0;
                                 estado_atual = TELA_FIM_DIA;
-                                if (fome <= 0.0f || dias_sem_comer >= 3) { estado_atual = TELA_SAIR; }
+                                if (fome <= 0.0f || dias_sem_comer >= 3) { 
+                                    estado_atual = TELA_SAIR; 
+                                }
+                                if (dias_sem_pagar >= 3) {
+                                    game_over_por_divida = true;
+                                    estado_atual = TELA_SAIR;
+                                }
                             }
                             else if (quarto_interact_id == 2) {
                                 estado_atual = TELA_JOGO;
@@ -880,11 +952,19 @@ int main() {
             case TELA_SAIR:
                 al_clear_to_color(al_map_rgb(10, 10, 10));
                 if (fonte_hud) {
-                    if (fome <= 0.0f || dias_sem_comer >= 3) {
-                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 400, 260, 0, "GAME OVER - Você morreu de fome.");
-                        al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 400, 340, 0, "Pressione R para reiniciar");
+                    if (game_over_por_divida) {
+                        // MENSAGEM DE DERROTA POR DÍVIDA
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - O agiota tomou sua casa.");
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 290, ALLEGRO_ALIGN_CENTER, "Você ficou 3 dias sem pagar a dívida.");
                     }
-                    else { al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 400, 300, 0, "Saindo do jogo..."); }
+                    else if (fome <= 0.0f || dias_sem_comer >= 3) {
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - Você morreu de fome.");
+                    }
+                    else {
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 640, 300, ALLEGRO_ALIGN_CENTER, "Saindo do jogo...");
+                    }
+
+                    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 640, 340, ALLEGRO_ALIGN_CENTER, "Pressione R para reiniciar");
                 }
                 break;
             default: break;
