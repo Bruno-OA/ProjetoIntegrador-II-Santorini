@@ -148,10 +148,10 @@ bool game_over_por_divida = false; // Para saber qual mensagem exibir no final
 
 // NPCs
 NPC NPC_LIST[MAX_NPCS] = {
-    { 1, 250, 100, 30 },
-    { 2, 650, 100, 30 },
-    { 3, 1050, 100, 30 },
-    { 4, 2, 360, 40 },
+    { 1, 250, 300, 90 },
+    { 2, 650, 300, 90 },
+    { 3, 1030, 300, 90 },
+    { 4, 2, 550, 40 },
     { -1, 0, 0, 0 }
 };
 
@@ -384,8 +384,8 @@ void inicializar_paredes() {
     // --- PAREDES DO MAPA ---
     num_paredes_mapa = 0;
 
-    PAREDES_MAPA[num_paredes_mapa++] = (Parede){ 0, 20, 1280, 35 };
-    PAREDES_MAPA[num_paredes_mapa++] = (Parede){ 0, 500, 1280, 550 };
+    PAREDES_MAPA[num_paredes_mapa++] = (Parede){ 0, 20, 1280, 300 };
+    //PAREDES_MAPA[num_paredes_mapa++] = (Parede){ 0, 500, 1280, 550 };
 }
 
 
@@ -454,7 +454,7 @@ int main() {
 
     // Posição de Saída do Quarto (Canto Esquerdo do Mapa)
     float POS_MAPA_ENTRADA_X = 50 - player_center_offset;
-    float POS_MAPA_ENTRADA_Y = POS_CENTRO_Y;
+    float POS_MAPA_ENTRADA_Y = 450;
 
     // Posição de Entrada do Quarto (Centralizada no Quarto)
     float POS_QUARTO_ENTRADA_X = POS_CENTRO_X;
@@ -782,7 +782,8 @@ int main() {
                     for (int i = 0; i < MAX_NPCS; i++) {
                         if (NPC_LIST[i].id != -1) {
                             ALLEGRO_COLOR cor_npc = (can_interact && current_npc_id == NPC_LIST[i].id) ? al_map_rgb(255, 0, 0) : al_map_rgb(150, 150, 150);
-                            //al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
+                            al_draw_filled_circle(NPC_LIST[i].x, NPC_LIST[i].y, NPC_LIST[i].raio, cor_npc);
+                            al_draw_rectangle(current_walls[i].x1, current_walls[i].y1, current_walls[i].x2, current_walls[i].y2, al_map_rgb(255, 255, 0), 2);
                         }
                     }
                 }
