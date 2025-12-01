@@ -392,7 +392,7 @@ void inicializar_paredes() {
 // ==================== Funções de carregamento/limpeza ====================
 int carregar_imagens() {
     img_menu_fundo = al_load_bitmap("menu_fundo1.png");
-    img_mapa_fundo = al_load_bitmap("mapa_fundo.png");
+    img_mapa_fundo = al_load_bitmap("mapa_fundo_3.png");
     img_player_sprite = al_load_bitmap("sprite_final.png");
     img_tutorial_fundo = al_load_bitmap("tutorial_fundo.png");
     img_quarto_fundo = al_load_bitmap("quarto_fundo1.png");
