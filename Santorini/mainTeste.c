@@ -163,9 +163,9 @@ CoordenadasBotao PORTA_AREA = { .x1 = 920, .y1 = 300, .x2 = 1000, .y2 = 550 };
 CoordenadasBotao INVEST_BTN_1 = { .x1 = 900, .y1 = 200, .x2 = 1200, .y2 = 250 };
 CoordenadasBotao INVEST_BTN_2 = { .x1 = 900, .y1 = 270, .x2 = 1200, .y2 = 320 };
 CoordenadasBotao INVEST_BTN_3 = { .x1 = 900, .y1 = 340, .x2 = 1200, .y2 = 390 };
-CoordenadasBotao BET_BTN = { .x1 = 500, .y1 = 600, .x2 = 780, .y2 = 650 };
-CoordenadasBotao UP_BTN = { .x1 = 690, .y1 = 500, .x2 = 780, .y2 = 540 };
-CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 500, .x2 = 590, .y2 = 540 };
+CoordenadasBotao BET_BTN = { .x1 = 500, .y1 = 280, .x2 = 780, .y2 = 330 };
+CoordenadasBotao UP_BTN = { .x1 = 700, .y1 = 520, .x2 = 780, .y2 = 455 };
+CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 520, .x2 = 575, .y2 = 455 };
 
 // VARIÁVEIS DE PAREDE
 Parede PAREDES_QUARTO[MAX_PAREDES];
@@ -841,37 +841,37 @@ int main() {
             case TELA_CASSINO:
             {
                 al_draw_bitmap(img_cassino_fundo, 0, 0, 0);
-                ALLEGRO_COLOR COR_TEXTO_PADRAO = al_map_rgb(255, 255, 255);
+                ALLEGRO_COLOR COR_TEXTO_PADRAO = al_map_rgb(0, 0, 0);
 
                 // 1. Título e Saldo
-                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 50, ALLEGRO_ALIGN_CENTER, "CASSINO (1%% Chance de Ganho)");
-                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 90, ALLEGRO_ALIGN_CENTER, "Seu Saldo: R$%d", dinheiro);
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 350, ALLEGRO_ALIGN_CENTER, "CASSINO (1%% Chance de Ganho)");
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 210, ALLEGRO_ALIGN_CENTER, "Seu Saldo: R$%d", dinheiro);
 
                 // 2. Campo de Aposta (Valor Atual)
-                al_draw_filled_rectangle(500, 500, 780, 540, al_map_rgb(20, 20, 20));
-                al_draw_textf(fonte_hud, al_map_rgb(255, 255, 0), 640, 510, ALLEGRO_ALIGN_CENTER, "APOSTA: R$%d", aposta_valor);
+                al_draw_filled_rectangle(500, 520, 780, 455, al_map_rgb(20, 20, 20));
+                al_draw_textf(fonte_hud, al_map_rgb(255, 255, 0), 640, 480, ALLEGRO_ALIGN_CENTER, "APOSTA: R$%d", aposta_valor);
 
                 // 3. Botões de Controle de Aposta
                 // INC +50
-                al_draw_filled_rectangle(700, 500, 780, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 740, 510, ALLEGRO_ALIGN_CENTER, "+50");
+                al_draw_filled_rectangle(700, 520, 780, 455, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 740, 480, ALLEGRO_ALIGN_CENTER, "+50");
                 // INC +1
                 //al_draw_filled_rectangle(650, 500, 690, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 670, 510, ALLEGRO_ALIGN_CENTER, "+1");
 
                 // DEC -50
-                al_draw_filled_rectangle(500, 500, 540, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 520, 510, ALLEGRO_ALIGN_CENTER, "-50");
+                al_draw_filled_rectangle(500, 520, 575, 455, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 500, 480, ALLEGRO_ALIGN_CENTER, "-50");
                 // DEC -1
                 //al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-1");
 
                 // 4. Botão GIRAR / Apostar
                 ALLEGRO_COLOR bet_cor = (dinheiro >= aposta_valor) ? al_map_rgb(0, 150, 255) : al_map_rgb(50, 50, 50);
                 al_draw_filled_rectangle(BET_BTN.x1, BET_BTN.y1, BET_BTN.x2, BET_BTN.y2, bet_cor);
-                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 615, ALLEGRO_ALIGN_CENTER, "GIRAR! (R$%d)", aposta_valor);
+                al_draw_textf(fonte_hud, COR_TEXTO_PADRAO, 640, 300, ALLEGRO_ALIGN_CENTER, "GIRAR! (R$%d)", aposta_valor);
 
                 // 5. Exibir Resultado
                 if (aposta_resultado_exibir) {
                     ALLEGRO_COLOR resultado_cor = aposta_ganhou ? al_map_rgb(0, 255, 0) : al_map_rgb(255, 0, 0);
-                    const char* resultado_msg = aposta_ganhou ? "VOCÊ GANHOU! (+R$%d)" : "VOCÊ PERDEU! (-R$%d)";
-                    al_draw_textf(fonte_hud, resultado_cor, 640, 400, ALLEGRO_ALIGN_CENTER, resultado_msg, aposta_valor);
+                    const char* resultado_msg = aposta_ganhou ? "VOCE GANHOU! (+R$%d)" : "VOCE PERDEU! (-R$%d)";
+                    al_draw_textf(fonte_hud, resultado_cor, 630, 400, ALLEGRO_ALIGN_CENTER, resultado_msg, aposta_valor);
                 }
 
                 desenhar_hud_texto();
