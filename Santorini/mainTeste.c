@@ -164,8 +164,8 @@ CoordenadasBotao INVEST_BTN_1 = { .x1 = 900, .y1 = 200, .x2 = 1200, .y2 = 250 };
 CoordenadasBotao INVEST_BTN_2 = { .x1 = 900, .y1 = 270, .x2 = 1200, .y2 = 320 };
 CoordenadasBotao INVEST_BTN_3 = { .x1 = 900, .y1 = 340, .x2 = 1200, .y2 = 390 };
 CoordenadasBotao BET_BTN = { .x1 = 500, .y1 = 280, .x2 = 780, .y2 = 330 };
-CoordenadasBotao UP_BTN = { .x1 = 700, .y1 = 450, .x2 = 780, .y2 = 500 }; // +50
-CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 450, .x2 = 580, .y2 = 500 }; // -50
+CoordenadasBotao UP_BTN = { .x1 = 700, .y1 = 455, .x2 = 780, .y2 = 520 }; // +50
+CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 455, .x2 = 580, .y2 = 520 }; // -50
 
 // VARIÁVEIS DE PAREDE
 Parede PAREDES_QUARTO[MAX_PAREDES];
@@ -856,11 +856,11 @@ int main() {
                 // 3. Botões de Controle de Aposta
                 // INC +50
                 al_draw_filled_rectangle(UP_BTN.x1, UP_BTN.y1, UP_BTN.x2, UP_BTN.y2, al_map_rgb(0, 150, 0));
-                al_draw_text(fonte_hud, COR_TEXTO_PADRAO, (UP_BTN.x1 + UP_BTN.x2) / 2, 465, ALLEGRO_ALIGN_CENTER, "+50");
+                al_draw_text(fonte_hud, COR_TEXTO_PADRAO, (UP_BTN.x1 + UP_BTN.x2) / 2, 485, ALLEGRO_ALIGN_CENTER, "+50");
 
                 // DEC -50
                 al_draw_filled_rectangle(DOWN_BTN.x1, DOWN_BTN.y1, DOWN_BTN.x2, DOWN_BTN.y2, al_map_rgb(150, 0, 0));
-                al_draw_text(fonte_hud, COR_TEXTO_PADRAO, (DOWN_BTN.x1 + DOWN_BTN.x2) / 2, 465, ALLEGRO_ALIGN_CENTER, "-50");
+                al_draw_text(fonte_hud, COR_TEXTO_PADRAO, (DOWN_BTN.x1 + DOWN_BTN.x2) / 2, 485, ALLEGRO_ALIGN_CENTER, "-50");
                 //al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-1");
 
                 // 4. Botão GIRAR / Apostar
@@ -875,7 +875,7 @@ int main() {
                     al_draw_textf(fonte_hud, resultado_cor, 630, 400, ALLEGRO_ALIGN_CENTER, resultado_msg, aposta_valor);
                 }
 
-                desenhar_hud_texto();
+                //desenhar_hud_texto();
                 break;
             }
 
