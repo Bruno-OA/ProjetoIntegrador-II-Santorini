@@ -90,14 +90,14 @@ typedef struct {
 } FoodItem;
 
 FoodItem FOOD_OPTIONS[MAX_FOOD_ITEMS] = {
-    {"Pães",          10,                 5.0f},
-    {"Berinjela",     20,                 15.0f},
-    {"Tomate",        30,                 10.0f},
-    {"Uva",           40,                 20.0f},
-    {"Queijo",        50,                 30.0f},
-    {"Alcaparras",    70,                 25.0f},
-    {"Peixe",         100,                50.0f},
-    {"Figo",          120,                40.0f}
+    {"Pães",        10,                 5.0f},
+    {"Peixe",       100,                50.0f},
+    {"Beringela",   20,                 15.0f},
+    {"Alcaparras",  70,                 25.0f},
+    {"Queijo",      50,                 30.0f},
+    {"Figo",        120,                40.0f},
+    {"Tomate",      30,                 10.0f},
+    {"Uva",         40,                 20.0f}
 };
 CoordenadasBotao FOOD_BTN[MAX_FOOD_ITEMS];
 
@@ -395,7 +395,7 @@ int carregar_imagens() {
     img_player_sprite = al_load_bitmap("sprite_final.png");
     img_tutorial_fundo = al_load_bitmap("tutorial_fundo.png");
     img_quarto_fundo = al_load_bitmap("quarto_fundo1.png");
-    img_mercado_fundo = al_load_bitmap("mercado_fundo.png");
+    img_mercado_fundo = al_load_bitmap("mercado_fundo_2.png");
     img_cassino_fundo = al_load_bitmap("cassino_fundo_2.png");
     img_banco_fundo = al_load_bitmap("banco_fundo_2.png");
     img_fim_dia_fundo = al_load_bitmap("fim_dia_fundo_2.png");
@@ -801,7 +801,7 @@ int main() {
                 al_draw_bitmap(img_mercado_fundo, 0, 0, 0);
 
                 al_draw_textf(fonte_hud, COR_TEXTO, 50, 50, 0, "Mercadinho: Saldo R$ %d", dinheiro);
-                al_draw_textf(fonte_hud, COR_TEXTO, 50, 80, 0, "Clique para Comprar:");
+                al_draw_textf(fonte_hud, COR_TEXTO, 50, 80, 0, "Clique na placa para Comprar:");
 
                 int start_x = 275;
                 int start_y = 150;
@@ -826,17 +826,17 @@ int main() {
                     ALLEGRO_COLOR cor_fundo = tem_dinheiro ? al_map_rgb(0, 100, 0) : al_map_rgb(50, 50, 50);
                     ALLEGRO_COLOR cor_alerta = tem_dinheiro ? al_map_rgb(255, 255, 255) : al_map_rgb(255, 100, 100);
 
-                    al_draw_filled_rectangle(x1, y1, x2, y2, cor_fundo);
+                    //al_draw_filled_rectangle(x1, y1, x2, y2, cor_fundo);
 
-                    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x1 + 10, y1 + 5, 0, "%s", FOOD_OPTIONS[i].nome);
+                    //al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), x1 + 10, y1 + 5, 0, "%s", FOOD_OPTIONS[i].nome);
 
-                    al_draw_textf(fonte_hud, cor_alerta, x1 + 10, y1 + 25, 0,
+                    /*al_draw_textf(fonte_hud, cor_alerta, x1 + 10, y1 + 25, 0,
                         "R$%d | Fome: +%.0f%%",
                         FOOD_OPTIONS[i].custo,
-                        FOOD_OPTIONS[i].ganho_fome);
+                        FOOD_OPTIONS[i].ganho_fome);*/
                 }
 
-                desenhar_hud_texto();
+                //desenhar_hud_texto();
                 break;
             }
 
