@@ -164,8 +164,8 @@ CoordenadasBotao INVEST_BTN_1 = { .x1 = 900, .y1 = 200, .x2 = 1200, .y2 = 250 };
 CoordenadasBotao INVEST_BTN_2 = { .x1 = 900, .y1 = 270, .x2 = 1200, .y2 = 320 };
 CoordenadasBotao INVEST_BTN_3 = { .x1 = 900, .y1 = 340, .x2 = 1200, .y2 = 390 };
 CoordenadasBotao BET_BTN = { .x1 = 500, .y1 = 280, .x2 = 780, .y2 = 330 };
-CoordenadasBotao UP_BTN = { .x1 = 700, .y1 = 520, .x2 = 780, .y2 = 455 };
-CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 520, .x2 = 575, .y2 = 455 };
+CoordenadasBotao UP_BTN = { .x1 = 700, .y1 = 450, .x2 = 780, .y2 = 500 }; // +50
+CoordenadasBotao DOWN_BTN = { .x1 = 500, .y1 = 450, .x2 = 580, .y2 = 500 }; // -50
 
 // VARIÁVEIS DE PAREDE
 Parede PAREDES_QUARTO[MAX_PAREDES];
@@ -565,14 +565,16 @@ int main() {
                 if (ev.mouse.x >= BET_BTN.x1 && ev.mouse.x <= BET_BTN.x2 && ev.mouse.y >= BET_BTN.y1 && ev.mouse.y <= BET_BTN.y2) {
                     apostar_cassino(aposta_valor, &dinheiro, &ganho_dia, &gasto_dia, &aposta_resultado_exibir, &aposta_ganhou);
                 }
-                // 2. Botões de AJUSTE de 50 e 1 (Simplificado)
-                // Checa áreas de +50 (direta) e -50 (esquerda)
-                if ((ev.mouse.x >= 700 && ev.mouse.x <= 780 && ev.mouse.y >= 500 && ev.mouse.y <= 540) || (ev.mouse.x >= 650 && ev.mouse.x <= 690 && ev.mouse.y >= 500 && ev.mouse.y <= 540)) { ajuste = 50; }
-                else if ((ev.mouse.x >= 500 && ev.mouse.x <= 540 && ev.mouse.y >= 500 && ev.mouse.y <= 540) || (ev.mouse.x >= 550 && ev.mouse.x <= 590 && ev.mouse.y >= 500 && ev.mouse.y <= 540)) { ajuste = -50; }
 
-                // Checa áreas de +1 e -1
-                else if (ev.mouse.x >= 600 && ev.mouse.x <= 640 && ev.mouse.y >= 500 && ev.mouse.y <= 540) { ajuste = 1; }
-                else if (ev.mouse.x >= 500 && ev.mouse.x <= 540 && ev.mouse.y >= 550 && ev.mouse.y <= 590) { ajuste = -1; }
+                // 2. Botão Aumentar (+50) - Verifica apenas a struct UP_BTN
+                else if (ev.mouse.x >= UP_BTN.x1 && ev.mouse.x <= UP_BTN.x2 && ev.mouse.y >= UP_BTN.y1 && ev.mouse.y <= UP_BTN.y2) {
+                    ajuste = 50;
+                }
+
+                // 3. Botão Diminuir (-50) - Verifica apenas a struct DOWN_BTN
+                else if (ev.mouse.x >= DOWN_BTN.x1 && ev.mouse.x <= DOWN_BTN.x2 && ev.mouse.y >= DOWN_BTN.y1 && ev.mouse.y <= DOWN_BTN.y2) {
+                    ajuste = -50;
+                }
 
                 // Aplica o ajuste (se houver) e checa limites
                 if (ajuste != 0) {
@@ -853,13 +855,12 @@ int main() {
 
                 // 3. Botões de Controle de Aposta
                 // INC +50
-                al_draw_filled_rectangle(700, 520, 780, 455, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 740, 480, ALLEGRO_ALIGN_CENTER, "+50");
-                // INC +1
-                //al_draw_filled_rectangle(650, 500, 690, 540, al_map_rgb(0, 150, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 670, 510, ALLEGRO_ALIGN_CENTER, "+1");
+                al_draw_filled_rectangle(UP_BTN.x1, UP_BTN.y1, UP_BTN.x2, UP_BTN.y2, al_map_rgb(0, 150, 0));
+                al_draw_text(fonte_hud, COR_TEXTO_PADRAO, (UP_BTN.x1 + UP_BTN.x2) / 2, 465, ALLEGRO_ALIGN_CENTER, "+50");
 
                 // DEC -50
-                al_draw_filled_rectangle(500, 520, 575, 455, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 500, 480, ALLEGRO_ALIGN_CENTER, "-50");
-                // DEC -1
+                al_draw_filled_rectangle(DOWN_BTN.x1, DOWN_BTN.y1, DOWN_BTN.x2, DOWN_BTN.y2, al_map_rgb(150, 0, 0));
+                al_draw_text(fonte_hud, COR_TEXTO_PADRAO, (DOWN_BTN.x1 + DOWN_BTN.x2) / 2, 465, ALLEGRO_ALIGN_CENTER, "-50");
                 //al_draw_filled_rectangle(550, 500, 590, 540, al_map_rgb(150, 0, 0)); al_draw_text(fonte_hud, COR_TEXTO_PADRAO, 570, 510, ALLEGRO_ALIGN_CENTER, "-1");
 
                 // 4. Botão GIRAR / Apostar
