@@ -398,7 +398,7 @@ int carregar_imagens() {
     img_mercado_fundo = al_load_bitmap("mercado_fundo.png");
     img_cassino_fundo = al_load_bitmap("cassino_fundo_2.png");
     img_banco_fundo = al_load_bitmap("banco_fundo_2.png");
-    img_fim_dia_fundo = al_load_bitmap("fim_dia_fundo.png");
+    img_fim_dia_fundo = al_load_bitmap("fim_dia_fundo_2.png");
 
     if (!img_menu_fundo && !img_mapa_fundo) { return 0; }
     return 1;
@@ -435,7 +435,7 @@ int main() {
     ALLEGRO_EVENT_QUEUE* fila = al_create_event_queue();
     ALLEGRO_TIMER* timer = al_create_timer(1.0 / 60.0);
 
-    fonte_hud = al_load_ttf_font("arial.ttf", 18, 0);
+    fonte_hud = al_load_ttf_font("arial.ttf", 25, 0);
     if (!fonte_hud) { fonte_hud = al_create_builtin_font(); }
 
     if (!carregar_imagens()) {
@@ -944,10 +944,73 @@ int main() {
                 if (img_fim_dia_fundo) { al_draw_bitmap(img_fim_dia_fundo, 0, 0, 0); }
                 else { al_draw_filled_rectangle(0, 0, LARGURA_TELA, ALTURA_TELA, al_map_rgb(20, 20, 20)); }
                 if (fonte_hud) {
-                    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 520, 180, ALLEGRO_ALIGN_CENTER, "Fim do Dia %d", dia_atual - 1);
-                    al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 520, 300, ALLEGRO_ALIGN_CENTER, "Saldo atual: R$ %d", dinheiro);
-                    al_draw_textf(fonte_hud, al_map_rgb(200, 200, 200), 520, 360, ALLEGRO_ALIGN_CENTER, "Clique no botão FECHAR para voltar ao menu.");
+                    // --- 1. Cálculos Prévios ---
+
+                    // Contar investimentos ativos
+                    int qtd_investimentos = 0;
+                    for (int i = 0; i < MAX_INVESTMENTS; i++) {
+                        if (active_investments[i].active) {
+                            qtd_investimentos++;
+                        }
+                    }
+
+                    // Definir cores baseadas em status
+                    ALLEGRO_COLOR cor_titulo = al_map_rgb(255, 255, 255);
+                    ALLEGRO_COLOR cor_saldo = al_map_rgb(100, 255, 100);
+                    ALLEGRO_COLOR cor_fundo = al_map_rgb(0, 0, 0);
+
+                    // Cor da dívida (Verde se 0, Vermelho se atrasado, Amarelo se pendente normal)
+                    ALLEGRO_COLOR cor_divida;
+                    if (divida_total <= 0) cor_divida = al_map_rgb(100, 255, 255); // Quitada (Ciano)
+                    else if (dias_sem_pagar > 0) cor_divida = al_map_rgb(255, 50, 50); // Atrasada (Vermelho)
+                    else cor_divida = al_map_rgb(255, 255, 100); // Em dia (Amarelo)
+
+                    // Cor da fome (Vermelho se crítico)
+                    ALLEGRO_COLOR cor_fome = (fome <= 20.0f) ? al_map_rgb(255, 50, 50) : al_map_rgb(255, 255, 255);
+
+                    // --- 2. Desenho das Informações ---
+                    int centro_x = LARGURA_TELA / 2;
+                    int y_base = 300;
+                    int espaco = 40; // Espaçamento entre linhas
+                    int centro_x_fundo = (LARGURA_TELA + 2) / 2;
+                    int y_base_fundo = 301;
                     
+                    // Título
+                    al_draw_textf(fonte_hud, cor_fundo, centro_x, 190, ALLEGRO_ALIGN_CENTER, "=== RESUMO DO DIA %d ===", dia_atual - 1);
+                    al_draw_textf(fonte_hud, cor_titulo, centro_x, 190, ALLEGRO_ALIGN_CENTER, "=== RESUMO DO DIA %d ===", dia_atual - 1);
+
+                    // Finanças
+                    al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 1), ALLEGRO_ALIGN_CENTER, "Saldo Atual: R$ %d", dinheiro);
+                    al_draw_textf(fonte_hud, cor_saldo, centro_x, y_base + (espaco * 1), ALLEGRO_ALIGN_CENTER, "Saldo Atual: R$ %d", dinheiro);
+
+                    // Status da Dívida
+                    if (divida_total <= 0) {
+                        al_draw_text(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 2), ALLEGRO_ALIGN_CENTER, "Status Divida: TOTALMENTE PAGA!");
+                        al_draw_text(fonte_hud, cor_divida, centro_x, y_base + (espaco * 2), ALLEGRO_ALIGN_CENTER, "Status Divida: TOTALMENTE PAGA!");
+                    }
+                    else {
+                        // Verifica se pagou hoje (se dias_sem_pagar for 0, significa que pagou ou está em dia)
+                        if (dias_sem_pagar == 0) {
+                            al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 2), ALLEGRO_ALIGN_CENTER, "Divida Restante: R$ %d (Parcela do dia PAGA)", divida_total);
+                            al_draw_textf(fonte_hud, cor_divida, centro_x, y_base + (espaco * 2), ALLEGRO_ALIGN_CENTER, "Divida Restante: R$ %d (Parcela do dia PAGA)", divida_total);
+                        }
+                        else {
+                            al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 2), ALLEGRO_ALIGN_CENTER, "Divida Restante: R$ %d (NAO PAGA! Atraso: %d/3)", divida_total, dias_sem_pagar);
+                            al_draw_textf(fonte_hud, cor_divida, centro_x, y_base + (espaco * 2), ALLEGRO_ALIGN_CENTER, "Divida Restante: R$ %d (NAO PAGA! Atraso: %d/3)", divida_total, dias_sem_pagar);
+                        }
+                    }
+
+                    // Banco
+                    al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 3), ALLEGRO_ALIGN_CENTER, "Investimentos no Banco: %d ativo(s)", qtd_investimentos);
+                    al_draw_textf(fonte_hud, cor_titulo, centro_x, y_base + (espaco * 3), ALLEGRO_ALIGN_CENTER, "Investimentos no Banco: %d ativo(s)", qtd_investimentos);
+
+                    // Saúde / Fome
+                    al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 4), ALLEGRO_ALIGN_CENTER, "Nivel de Fome: %.0f%%", fome);
+                    al_draw_textf(fonte_hud, cor_fome, centro_x, y_base + (espaco * 4), ALLEGRO_ALIGN_CENTER, "Nivel de Fome: %.0f%%", fome);
+
+                    al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao FECHAR para voltar ao menu.");
+                    al_draw_textf(fonte_hud, cor_titulo, centro_x, y_base + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao FECHAR para voltar ao menu.");
+                
                 }
                 break;
             case TELA_SAIR:
@@ -956,7 +1019,7 @@ int main() {
                     if (game_over_por_divida) {
                         // MENSAGEM DE DERROTA POR DÍVIDA
                         al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - O agiota tomou sua casa.");
-                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 290, ALLEGRO_ALIGN_CENTER, "Você ficou 3 dias sem pagar a divida.");
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 290, ALLEGRO_ALIGN_CENTER, "Voce ficou 3 dias sem pagar a divida.");
                     }
                     else if (fome <= 0.0f || dias_sem_comer >= 3) {
                         al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - Você morreu de fome.");
