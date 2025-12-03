@@ -74,9 +74,9 @@ typedef struct {
 } ActiveInvestment;
 
 InvestmentOption INVESTMENT_OPTIONS[] = {
-    {1, "Curto Prazo (+20%% | 2 dias)", 0.20f, 2, 100},
-    {2, "Medio Prazo (+40%% | 4 dias)", 0.40f, 4, 150},
-    {3, "Alto Risco (+75%% | 7 dias)", 0.75f, 7, 200}
+    {1, "Curto Prazo (+20% | 2 dias)", 0.20f, 2, 100},
+    {2, "Medio Prazo (+40% | 4 dias)", 0.40f, 4, 150},
+    {3, "Longo Prazo (+75% | 7 dias)", 0.75f, 7, 200}
 };
 ActiveInvestment active_investments[MAX_INVESTMENTS] = { 0 };
 
@@ -1049,8 +1049,8 @@ int main() {
                         al_draw_textf(fonte_hud, al_map_rgb(100, 255, 255), centro_x, y_base + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique em CONTINUAR para a vitoria!");
                     }
                     else {
-                        al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao FECHAR para continuar.");
-                        al_draw_textf(fonte_hud, cor_titulo, centro_x, y_base + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao FECHAR para continuar.");
+                        al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao CONTINUE para continuar.");
+                        al_draw_textf(fonte_hud, cor_titulo, centro_x, y_base + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao CONTINUE para continuar.");
                     }
 
                 }
