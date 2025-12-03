@@ -144,7 +144,7 @@ bool aposta_resultado_exibir = false;
 bool aposta_ganhou = false;
 
 // Variáveis de Dívida
-int divida_total = 100;    // Dívida inicial
+int divida_total = 1000;    // Dívida inicial
 int dias_sem_pagar = 0;     // Contador para Game Over
 int valor_parcela = 100;    // Quanto desconta por dia
 int juros_atraso = 50;      // Penalidade se não pagar
