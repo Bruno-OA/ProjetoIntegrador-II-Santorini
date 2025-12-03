@@ -77,9 +77,9 @@ typedef struct {
 } ActiveInvestment;
 
 InvestmentOption INVESTMENT_OPTIONS[] = {
-    {1, "Curto Prazo (+20%% | 2 dias)", 0.20f, 2, 100},
-    {2, "Medio Prazo (+40%% | 4 dias)", 0.40f, 4, 150},
-    {3, "Alto Risco (+75%% | 7 dias)", 0.75f, 7, 200}
+    {1, "Curto Prazo (+20% | 2 dias)", 0.20f, 2, 100},
+    {2, "Medio Prazo (+40% | 4 dias)", 0.40f, 4, 150},
+    {3, "Longo prazo (+75% | 7 dias)", 0.75f, 7, 200}
 };
 ActiveInvestment active_investments[MAX_INVESTMENTS] = { 0 };
 
@@ -155,7 +155,7 @@ bool aposta_ganhou = false;
 // Variáveis de Dívida
 int divida_total = 1000;    // Dívida inicial
 int dias_sem_pagar = 0;     // Contador para Game Over
-int valor_parcela = 100;    // Quanto desconta por dia
+int valor_parcela = 50;    // Quanto desconta por dia
 int juros_atraso = 50;      // Penalidade se não pagar
 bool game_over_por_divida = false; // Para saber qual mensagem exibir no final
 
@@ -471,9 +471,9 @@ void inicializar_paredes() {
 // ==================== Funções de carregamento/limpeza ====================
 int carregar_imagens() {
     img_menu_fundo = al_load_bitmap("menu_fundo1.png");
-    img_mapa_fundo = al_load_bitmap("mapa_fundo_3.png");
+    img_mapa_fundo = al_load_bitmap("mapa_fundo_4.png");
     img_player_sprite = al_load_bitmap("sprite_final.png");
-    img_tutorial_fundo = al_load_bitmap("tutorial_fundo.png");
+    img_tutorial_fundo = al_load_bitmap("tutorial_fundo_2.png");
     img_quarto_fundo = al_load_bitmap("quarto_fundo1.png");
     img_mercado_fundo = al_load_bitmap("mercado_fundo_2.png");
     img_cassino_fundo = al_load_bitmap("cassino_fundo_2.png");
@@ -1154,8 +1154,8 @@ int main() {
                         al_draw_textf(fonte_hud, al_map_rgb(100, 255, 255), centro_x, y_base + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique em CONTINUAR para a vitoria!");
                     }
                     else {
-                        al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao FECHAR para continuar.");
-                        al_draw_textf(fonte_hud, cor_titulo, centro_x, y_base + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao FECHAR para continuar.");
+                        al_draw_textf(fonte_hud, cor_fundo, centro_x_fundo, y_base_fundo + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao CONTINUE para continuar.");
+                        al_draw_textf(fonte_hud, cor_titulo, centro_x, y_base + (espaco * 5), ALLEGRO_ALIGN_CENTER, "Clique no botao CONTINUE para continuar.");
                     }
 
                 }
@@ -1169,7 +1169,7 @@ int main() {
                         al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 290, ALLEGRO_ALIGN_CENTER, "Voce ficou 3 dias sem pagar a divida.");
                     }
                     else if (fome <= 0.0f || dias_sem_comer >= 3) {
-                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - Você morreu de fome.");
+                        al_draw_textf(fonte_hud, al_map_rgb(255, 80, 80), 640, 260, ALLEGRO_ALIGN_CENTER, "GAME OVER - Voce morreu de fome.");
                     }
                     else {
                         al_draw_textf(fonte_hud, al_map_rgb(255, 255, 255), 640, 300, ALLEGRO_ALIGN_CENTER, "Saindo do jogo...");
