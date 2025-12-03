@@ -142,8 +142,8 @@ float player_velocidade = 7.0f;
 int PLAYER_RAIO = 50;
 float anim_frame = 0.f;
 int anim_current_frame_y = 90 * 2;
-const int FRAME_LARGURA = 95;
-const int FRAME_ALTURA = 180;
+const float FRAME_LARGURA = 96.10;
+const float FRAME_ALTURA = 180.45;
 
 // Variáveis do Cassino
 int aposta_valor = 50;
