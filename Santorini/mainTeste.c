@@ -6,6 +6,9 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
+// [NOVO] Bibliotecas de Áudio
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 #include <math.h>
 #include <stdbool.h>
 #include <string.h> 
@@ -122,9 +125,15 @@ ALLEGRO_BITMAP* img_cassino_fundo = NULL;
 ALLEGRO_BITMAP* img_banco_fundo = NULL;
 ALLEGRO_BITMAP* img_fim_dia_fundo = NULL;
 ALLEGRO_BITMAP* img_player_sprite = NULL;
-// [NOVO] Novos Bitmaps
 ALLEGRO_BITMAP* img_historia_fundo = NULL;
 ALLEGRO_BITMAP* img_vitoria_fundo = NULL;
+
+// [NOVO] Variáveis de Áudio
+ALLEGRO_SAMPLE* som_menu = NULL;
+ALLEGRO_SAMPLE* som_jogo = NULL;
+ALLEGRO_SAMPLE* som_cassino = NULL;
+ALLEGRO_SAMPLE* som_vitoria = NULL;
+ALLEGRO_SAMPLE_INSTANCE* instancia_musica = NULL; // Player de música
 
 // Variáveis do Jogador
 float player_pos_x = LARGURA_TELA / 2.0;
@@ -194,6 +203,69 @@ bool key_down[ALLEGRO_KEY_MAX] = { false };
 // =================================================================
 // FUNÇÕES DE LÓGICA E UTILIDADE
 // =================================================================
+
+// [NOVO] Função para gerenciar a música baseada no estado
+void atualizar_musica() {
+    static EstadoDoJogo estado_anterior_musica = -1;
+
+    // Só troca a música se o estado mudou ou é a primeira execução
+    if (estado_atual == estado_anterior_musica) return;
+
+    ALLEGRO_SAMPLE* proxima_musica = NULL;
+
+    switch (estado_atual) {
+    case TELA_MENU:
+    case TELA_HISTORIA:
+        proxima_musica = som_menu;
+        break;
+
+    case TELA_QUARTO:
+    case TELA_JOGO:
+    case TELA_MERCADO:
+    case TELA_BANCO:
+    case TELA_FIM_DIA:
+    case TELA_TUTORIAL:
+        // Todas essas telas usam a música principal de gameplay
+        proxima_musica = som_jogo;
+        break;
+
+    case TELA_CASSINO:
+        proxima_musica = som_cassino;
+        break;
+
+    case TELA_VITORIA:
+        proxima_musica = som_vitoria;
+        break;
+
+    case TELA_SAIR:
+        proxima_musica = NULL; // Silêncio
+        break;
+
+    default:
+        proxima_musica = som_jogo;
+        break;
+    }
+
+    if (!instancia_musica) return;
+
+    // Lógica de troca
+    if (!proxima_musica) {
+        al_stop_sample_instance(instancia_musica);
+    }
+    else {
+        // Verifica qual musica esta tocando agora
+        ALLEGRO_SAMPLE* musica_tocando_agora = al_get_sample(instancia_musica);
+
+        // Se a música nova for diferente da atual, troca
+        if (musica_tocando_agora != proxima_musica) {
+            al_stop_sample_instance(instancia_musica);
+            al_set_sample(instancia_musica, proxima_musica);
+            al_play_sample_instance(instancia_musica);
+        }
+    }
+
+    estado_anterior_musica = estado_atual;
+}
 
 bool check_collision(int x1, int y1, int r1, int x2, int y2, int r2) {
     int dx = x1 - x2;
@@ -410,6 +482,18 @@ int carregar_imagens() {
     img_historia_fundo = al_load_bitmap("historia_fundo.png");
     img_vitoria_fundo = al_load_bitmap("vitoria_fundo.png");
 
+    // [NOVO] Carregar Músicas
+    som_menu = al_load_sample("musica_menu.ogg");
+    som_jogo = al_load_sample("musica_jogo.ogg");
+    som_cassino = al_load_sample("musica_cassino.ogg");
+    som_vitoria = al_load_sample("musica_vitoria.ogg");
+
+    // [NOVO] Configurar Player de Musica
+    instancia_musica = al_create_sample_instance(NULL);
+    al_set_sample_instance_playmode(instancia_musica, ALLEGRO_PLAYMODE_LOOP);
+    al_attach_sample_instance_to_mixer(instancia_musica, al_get_default_mixer());
+
+    // Se alguma imagem principal falhar, retorna erro
     if (!img_menu_fundo && !img_mapa_fundo) { return 0; }
     return 1;
 }
@@ -427,6 +511,13 @@ void limpar_recursos() {
     if (img_historia_fundo) al_destroy_bitmap(img_historia_fundo);
     if (img_vitoria_fundo) al_destroy_bitmap(img_vitoria_fundo);
 
+    // [NOVO] Limpar Audio
+    if (som_menu) al_destroy_sample(som_menu);
+    if (som_jogo) al_destroy_sample(som_jogo);
+    if (som_cassino) al_destroy_sample(som_cassino);
+    if (som_vitoria) al_destroy_sample(som_vitoria);
+    if (instancia_musica) al_destroy_sample_instance(instancia_musica);
+
     if (fonte_hud) al_destroy_font(fonte_hud);
 }
 
@@ -440,6 +531,12 @@ int main() {
     if (!al_init()) { fprintf(stderr, "Falha ao inicializar Allegro.\n"); return -1; }
     al_init_primitives_addon();
     al_install_keyboard(); al_install_mouse();
+
+    // [NOVO] Inicialização de Áudio (Deve vir antes de carregar imagens/sons)
+    if (!al_install_audio()) { fprintf(stderr, "Falha ao instalar audio.\n"); return -1; }
+    if (!al_init_acodec_addon()) { fprintf(stderr, "Falha ao inicializar codecs.\n"); return -1; }
+    al_reserve_samples(1); // Reserva canal para música
+
     al_init_image_addon(); al_init_font_addon(); al_init_ttf_addon();
 
     ALLEGRO_DISPLAY* janela = al_create_display(LARGURA_TELA, ALTURA_TELA);
@@ -452,7 +549,7 @@ int main() {
     if (!fonte_hud) { fonte_hud = al_create_builtin_font(); }
 
     if (!carregar_imagens()) {
-        fprintf(stderr, "Falha crítica ao inicializar imagens.\n");
+        fprintf(stderr, "Falha crítica ao inicializar recursos (imagens ou audio).\n");
         limpar_recursos(); al_destroy_display(janela); return -1;
     }
 
@@ -484,6 +581,10 @@ int main() {
     al_start_timer(timer);
 
     while (rodando) {
+
+        // [NOVO] Atualiza a musica baseado na tela atual
+        atualizar_musica();
+
         ALLEGRO_EVENT ev;
         al_wait_for_event(fila, &ev);
 
