@@ -122,7 +122,6 @@ ALLEGRO_BITMAP* img_cassino_fundo = NULL;
 ALLEGRO_BITMAP* img_banco_fundo = NULL;
 ALLEGRO_BITMAP* img_fim_dia_fundo = NULL;
 ALLEGRO_BITMAP* img_player_sprite = NULL;
-// [NOVO] Novos Bitmaps
 ALLEGRO_BITMAP* img_historia_fundo = NULL;
 ALLEGRO_BITMAP* img_vitoria_fundo = NULL;
 
@@ -401,7 +400,7 @@ int carregar_imagens() {
     img_menu_fundo = al_load_bitmap("menu_fundo1.png");
     img_mapa_fundo = al_load_bitmap("mapa_fundo_3.png");
     img_player_sprite = al_load_bitmap("sprite_final.png");
-    img_tutorial_fundo = al_load_bitmap("tutorial_fundo.png");
+    img_tutorial_fundo = al_load_bitmap("tutorial_fundo_2.png");
     img_quarto_fundo = al_load_bitmap("quarto_fundo1.png");
     img_mercado_fundo = al_load_bitmap("mercado_fundo_2.png");
     img_cassino_fundo = al_load_bitmap("cassino_fundo_2.png");
@@ -811,10 +810,7 @@ int main() {
                 //Caso de Desenho Historia
             case TELA_HISTORIA:
                 if (img_historia_fundo) al_draw_bitmap(img_historia_fundo, 0, 0, 0);
-                else al_draw_filled_rectangle(0, 0, LARGURA_TELA, ALTURA_TELA, al_map_rgb(10, 10, 30));
-
-                // Texto de ajuda
-                al_draw_text(fonte_hud, al_map_rgb(255, 255, 255), LARGURA_TELA / 2, ALTURA_TELA - 50, ALLEGRO_ALIGN_CENTER, "Clique ou pressione ENTER para continuar...");
+                else al_draw_filled_rectangle(0, 0, LARGURA_TELA, ALTURA_TELA, al_map_rgb(10, 10, 30));       
                 break;
 
             case TELA_QUARTO:
